@@ -43,10 +43,24 @@ const App: React.FC = () => {
         try {
             const storedUsers = localStorage.getItem('leadai_users');
             const storedCurrentUser = localStorage.getItem('leadai_currentUser');
-            if (storedUsers) setUsers(JSON.parse(storedUsers));
-            if (storedCurrentUser) setCurrentUser(JSON.parse(storedCurrentUser));
+
+            if (storedUsers) {
+                const parsedUsers = JSON.parse(storedUsers);
+                if (Array.isArray(parsedUsers)) {
+                    setUsers(parsedUsers);
+                }
+            }
+            if (storedCurrentUser) {
+                const parsedCurrentUser = JSON.parse(storedCurrentUser);
+                if (parsedCurrentUser) {
+                    setCurrentUser(parsedCurrentUser);
+                }
+            }
         } catch (error) {
             console.error("Failed to parse from localStorage", error);
+            // Clear potentially corrupted data
+            localStorage.removeItem('leadai_users');
+            localStorage.removeItem('leadai_currentUser');
         }
     }, []);
 

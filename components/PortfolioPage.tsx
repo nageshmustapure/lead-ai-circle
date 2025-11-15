@@ -9,7 +9,7 @@ interface PortfolioPageProps {
 }
 
 const PortfolioPage: React.FC<PortfolioPageProps> = ({ user, currentUser, onUpdate }) => {
-    const canEdit = !!currentUser;
+    const canEdit = currentUser?.id === user.id;
     const [isEditing, setIsEditing] = useState(false);
     const [editUser, setEditUser] = useState<User>(user);
     const [copySuccess, setCopySuccess] = useState('');
