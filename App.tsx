@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useCallback } from 'react';
 import Header from './components/Header';
 import Hero from './components/Hero';
@@ -32,6 +33,50 @@ const NotFoundPage: React.FC = () => (
     </div>
 );
 
+// Ensures that any user object, especially one from localStorage, has all the necessary properties.
+const hydrateUser = (partialUser: any): User | null => {
+    if (!partialUser || typeof partialUser !== 'object' || !partialUser.id || !partialUser.username) {
+        return null; // Invalid base data
+    }
+
+    const defaultPortfolio: PortfolioData = {
+        tagline: "AI Enthusiast & Lifelong Learner",
+        about_me: `Hello, I'm ${partialUser.username}. Welcome to my profile!`,
+        profile_image_url: '',
+        contact: { email: '', phone: '', location: '', linkedin: '', github: '', website: '' },
+        skills_list: [],
+        projects: [],
+        experience_list: [],
+        education_list: [],
+    };
+
+    const portfolio = partialUser.portfolio || {};
+
+    const hydratedPortfolio: PortfolioData = {
+        ...defaultPortfolio,
+        ...portfolio,
+        contact: {
+            ...defaultPortfolio.contact,
+            ...(portfolio.contact || {}),
+        },
+        // Ensure arrays always exist
+        skills_list: Array.isArray(portfolio.skills_list) ? portfolio.skills_list : [],
+        projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+        experience_list: Array.isArray(portfolio.experience_list) ? portfolio.experience_list : [],
+        education_list: Array.isArray(portfolio.education_list) ? portfolio.education_list : [],
+        // Ensure profile image has a fallback
+        profile_image_url: portfolio.profile_image_url || `https://i.pravatar.cc/150?u=${partialUser.id}`,
+    };
+
+    return {
+        id: partialUser.id,
+        username: partialUser.username,
+        email: partialUser.email || '',
+        passwordHash: partialUser.passwordHash || '',
+        portfolio: hydratedPortfolio,
+    };
+};
+
 
 const App: React.FC = () => {
     const [authModal, setAuthModal] = useState<{ isOpen: boolean; view: 'login' | 'register' }>({ isOpen: false, view: 'login' });
@@ -47,17 +92,18 @@ const App: React.FC = () => {
             if (storedUsers) {
                 const parsedUsers = JSON.parse(storedUsers);
                 if (Array.isArray(parsedUsers)) {
-                    setUsers(parsedUsers);
+                    const hydratedUsers = parsedUsers.map(hydrateUser).filter((u): u is User => u !== null);
+                    setUsers(hydratedUsers);
                 }
             }
             if (storedCurrentUser) {
                 const parsedCurrentUser = JSON.parse(storedCurrentUser);
                 if (parsedCurrentUser) {
-                    setCurrentUser(parsedCurrentUser);
+                    setCurrentUser(hydrateUser(parsedCurrentUser));
                 }
             }
         } catch (error) {
-            console.error("Failed to parse from localStorage", error);
+            console.error("Failed to parse or hydrate from localStorage", error);
             // Clear potentially corrupted data
             localStorage.removeItem('leadai_users');
             localStorage.removeItem('leadai_currentUser');
@@ -158,7 +204,7 @@ const App: React.FC = () => {
                 }
     
                 if (currentUser?.id === u.id) {
-                    setCurrentUser(updatedUser);
+                    setCurrentUser(hydrateUser(updatedUser)); // Re-hydrate to be safe
                     persistData('leadai_currentUser', updatedUser);
                 }
                 return updatedUser;
@@ -185,6 +231,7 @@ const App: React.FC = () => {
         }
         if (page === 'profile' && param) {
             const userToView = users.find(u => u.username.toLowerCase() === param.toLowerCase());
+            // FIX: Corrected typo from `userToVielw` to `userToView`.
             return userToView ? <PortfolioPage user={userToView} currentUser={currentUser} onUpdate={handleUpdateUser} /> : <NotFoundPage />;
         }
         return <HomePage />;
