@@ -169,11 +169,11 @@
 <script type="importmap">
 {
   "imports": {
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "react": "https://aistudiocdn.com/react@^19.2.0",
     "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "three/": "https://aistudiocdn.com/three@^0.181.2/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
     "three": "https://aistudiocdn.com/three@^0.181.2",
+    "three/": "https://aistudiocdn.com/three@^0.181.2/",
     "vite": "https://aistudiocdn.com/vite@^7.2.4",
     "@vitejs/plugin-react": "https://aistudiocdn.com/@vitejs/plugin-react@^5.1.1"
   }
@@ -182,6 +182,7 @@
 </head>
 <body class="antialiased">
     <div id="root"></div>
-    <script type="module" src="/index.tsx"></script>
+    <!-- Removed importmap -->
+    <script type="module" src="./index.tsx"></script>
 </body>
 </html>
