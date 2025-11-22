@@ -4,8 +4,8 @@ import React, { useState, FormEvent } from 'react';
 interface AuthModalProps {
     initialView: 'login' | 'register';
     onClose: () => void;
-    onRegister: (username: string, email: string, passwordHash: string) => boolean;
-    onLogin: (email: string, passwordHash: string) => boolean;
+    onRegister: (username: string, email: string, password: string) => Promise<boolean>;
+    onLogin: (email: string, password: string) => Promise<boolean>;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister, onLogin }) => {
@@ -14,31 +14,42 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister,
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
+    const [loading, setLoading] = useState(false);
 
-    // Basic password hash simulation (DO NOT USE IN PRODUCTION)
-    const hashPassword = (pass: string) => {
-        return "hashed_" + pass;
-    }
-
-    const handleSubmit = (e: FormEvent) => {
+    const handleSubmit = async (e: FormEvent) => {
         e.preventDefault();
         setError('');
+        setLoading(true);
+
         if (view === 'register') {
             if (!username || !email || !password) {
                 setError('All fields are required.');
+                setLoading(false);
                 return;
             }
-            const success = onRegister(username, email, hashPassword(password));
-            if (!success) setError("Username or email may already be taken.");
+            if (password.length < 6) {
+                setError('Password must be at least 6 characters long.');
+                setLoading(false);
+                return;
+            }
+            const success = await onRegister(username, email, password);
+            if (!success) {
+                // Error is handled in alert in App.tsx, but we can set generic error here
+                // setError("Registration failed."); 
+            }
 
         } else {
              if (!email || !password) {
                 setError('All fields are required.');
+                setLoading(false);
                 return;
             }
-            const success = onLogin(email, hashPassword(password));
-            if (!success) setError("Invalid credentials.");
+            const success = await onLogin(email, password);
+            if (!success) {
+                // setError("Invalid credentials.");
+            }
         }
+        setLoading(false);
     };
     
     return (
@@ -92,10 +103,11 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister,
                             className="form-input"
                             placeholder="••••••••"
                         />
+                        {view === 'register' && <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters</p>}
                     </div>
                     {error && <p className="text-red-400 text-sm">{error}</p>}
-                    <button type="submit" className="w-full btn-primary mt-2">
-                        {view === 'register' ? 'Register' : 'Login'}
+                    <button type="submit" disabled={loading} className="w-full btn-primary mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        {loading ? 'Processing...' : (view === 'register' ? 'Register' : 'Login')}
                     </button>
                 </form>
 

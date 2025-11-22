@@ -1,3 +1,4 @@
+
 import React from 'react';
 
 export interface FoundingMember {
@@ -47,6 +48,5 @@ export interface User {
     id: string;
     username: string;
     email: string;
-    passwordHash: string; // NOTE: In a real app, never store plain text passwords. This is for simulation.
     portfolio: PortfolioData;
 }

@@ -11,6 +11,7 @@ import Link from './components/Link';
 import CommunityPage from './components/CommunityPage';
 import PortfolioPage from './components/PortfolioPage';
 import { User, PortfolioData } from './types';
+import { supabase } from './supabaseClient';
 
 const HomePage: React.FC = () => (
     <>
@@ -33,15 +34,11 @@ const NotFoundPage: React.FC = () => (
     </div>
 );
 
-// Ensures that any user object, especially one from localStorage, has all the necessary properties.
-const hydrateUser = (partialUser: any): User | null => {
-    if (!partialUser || typeof partialUser !== 'object' || !partialUser.id || !partialUser.username) {
-        return null; // Invalid base data
-    }
-
+// Ensures that any user object has all necessary properties
+const hydrateUser = (dbUser: any): User => {
     const defaultPortfolio: PortfolioData = {
         tagline: "AI Enthusiast & Lifelong Learner",
-        about_me: `Hello, I'm ${partialUser.username}. Welcome to my profile!`,
+        about_me: `Hello, I'm ${dbUser.username}.`,
         profile_image_url: '',
         contact: { email: '', phone: '', location: '', linkedin: '', github: '', website: '' },
         skills_list: [],
@@ -50,7 +47,7 @@ const hydrateUser = (partialUser: any): User | null => {
         education_list: [],
     };
 
-    const portfolio = partialUser.portfolio || {};
+    const portfolio = dbUser.portfolio || {};
 
     const hydratedPortfolio: PortfolioData = {
         ...defaultPortfolio,
@@ -59,20 +56,17 @@ const hydrateUser = (partialUser: any): User | null => {
             ...defaultPortfolio.contact,
             ...(portfolio.contact || {}),
         },
-        // Ensure arrays always exist
         skills_list: Array.isArray(portfolio.skills_list) ? portfolio.skills_list : [],
         projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
         experience_list: Array.isArray(portfolio.experience_list) ? portfolio.experience_list : [],
         education_list: Array.isArray(portfolio.education_list) ? portfolio.education_list : [],
-        // Ensure profile image has a fallback
-        profile_image_url: portfolio.profile_image_url || `https://i.pravatar.cc/150?u=${partialUser.id}`,
+        profile_image_url: portfolio.profile_image_url || `https://i.pravatar.cc/150?u=${dbUser.id}`,
     };
 
     return {
-        id: partialUser.id,
-        username: partialUser.username,
-        email: partialUser.email || '',
-        passwordHash: partialUser.passwordHash || '',
+        id: dbUser.id,
+        username: dbUser.username || 'Unknown',
+        email: dbUser.email || '',
         portfolio: hydratedPortfolio,
     };
 };
@@ -83,36 +77,59 @@ const App: React.FC = () => {
     const [users, setUsers] = useState<User[]>([]);
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [route, setRoute] = useState(window.location.hash);
+    const [loading, setLoading] = useState(true);
 
+    // 1. Fetch Users (Community) and Session on Load
     useEffect(() => {
-        try {
-            const storedUsers = localStorage.getItem('leadai_users');
-            const storedCurrentUser = localStorage.getItem('leadai_currentUser');
+        const initApp = async () => {
+            // Check for active session
+            const { data: { session } } = await supabase.auth.getSession();
+            
+            if (session && session.user) {
+                // If logged in, fetch their specific profile details
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                
+                if (profile) {
+                    setCurrentUser(hydrateUser(profile));
+                }
+            }
 
-            if (storedUsers) {
-                const parsedUsers = JSON.parse(storedUsers);
-                if (Array.isArray(parsedUsers)) {
-                    const hydratedUsers = parsedUsers.map(hydrateUser).filter((u): u is User => u !== null);
-                    setUsers(hydratedUsers);
-                }
+            // Fetch all community members
+            fetchCommunity();
+            setLoading(false);
+        };
+
+        initApp();
+
+        // Listen for auth changes (login/logout)
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+            if (session?.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('*')
+                    .eq('id', session.user.id)
+                    .single();
+                if (profile) setCurrentUser(hydrateUser(profile));
+            } else {
+                setCurrentUser(null);
             }
-            if (storedCurrentUser) {
-                const parsedCurrentUser = JSON.parse(storedCurrentUser);
-                if (parsedCurrentUser) {
-                    setCurrentUser(hydrateUser(parsedCurrentUser));
-                }
-            }
-        } catch (error) {
-            console.error("Failed to parse or hydrate from localStorage", error);
-            // Clear potentially corrupted data
-            localStorage.removeItem('leadai_users');
-            localStorage.removeItem('leadai_currentUser');
+        });
+
+        return () => subscription.unsubscribe();
+    }, []);
+
+    const fetchCommunity = async () => {
+        const { data, error } = await supabase.from('profiles').select('*');
+        if (error) {
+            console.error('Error fetching community:', error.message, error);
+        } else if (data) {
+            setUsers(data.map(hydrateUser));
         }
-    }, []);
-
-    const persistData = useCallback((key: string, data: any) => {
-        localStorage.setItem(key, JSON.stringify(data));
-    }, []);
+    };
 
     useEffect(() => {
         const handleHashChange = () => setRoute(window.location.hash);
@@ -120,108 +137,184 @@ const App: React.FC = () => {
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
     
-    const handleRegister = useCallback((username: string, email: string, passwordHash: string): boolean => {
-        if (users.some(u => u.email === email || u.username.toLowerCase() === username.toLowerCase())) {
+    const handleRegister = useCallback(async (username: string, email: string, password: string): Promise<boolean> => {
+        try {
+            // 1. Sign up with Supabase Auth
+            const { data: authData, error: authError } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                    data: {
+                        username: username, // Store username in auth metadata
+                    }
+                }
+            });
+
+            if (authError) {
+                console.error("Registration Error:", authError);
+                alert(`Registration Failed: ${authError.message}`);
+                return false;
+            }
+
+            if (authData.user) {
+                // Check if we have a session. If no session, email confirmation is likely required.
+                if (!authData.session) {
+                    alert("Registration successful! Please check your email to confirm your account.");
+                    setAuthModal({ isOpen: false, view: 'login' });
+                    return true;
+                }
+
+                // 2. Prepare Profile Data
+                const newPortfolio: PortfolioData = {
+                    tagline: "AI Enthusiast & Lifelong Learner",
+                    about_me: `Hello, I'm ${username}. I'm new here!`,
+                    profile_image_url: `https://i.pravatar.cc/150?u=${authData.user.id}`,
+                    contact: { email, phone: '', location: '', linkedin: '', github: '', website: '' },
+                    skills_list: ['AI', 'Machine Learning'],
+                    projects: [],
+                    experience_list: [],
+                    education_list: [],
+                };
+
+                // 3. Create or Update Profile using Upsert
+                // This handles race conditions if a trigger already created the profile
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .upsert({ 
+                        id: authData.user.id, 
+                        username: username, 
+                        email: email, 
+                        portfolio: newPortfolio 
+                    }, { onConflict: 'id' });
+
+                if (profileError) {
+                    console.error("Error saving profile:", profileError);
+                    alert(`Account created, but profile setup failed: ${profileError.message}`);
+                }
+
+                // Success
+                setAuthModal({ isOpen: false, view: 'login' });
+                await fetchCommunity(); // Refresh the list
+                
+                // Navigate to profile
+                setTimeout(() => {
+                    window.location.hash = `#/profile/${username}`;
+                }, 100);
+                
+                return true;
+            }
+            return false;
+        } catch (e: any) {
+            console.error("Unexpected error during registration:", e);
+            alert(`An unexpected error occurred: ${e.message || e}`);
             return false;
         }
-        const newUser: User = {
-            id: Date.now().toString(),
-            username,
-            email,
-            passwordHash,
-            portfolio: {
-                tagline: "AI Enthusiast & Lifelong Learner",
-                about_me: `Hello, I'm ${username}. I'm new here and excited to learn about AI! You can fill out this portfolio by clicking the 'Edit' button.`,
-                profile_image_url: `https://i.pravatar.cc/150?u=${Date.now().toString()}`,
-                contact: {
-                    email: email,
-                    phone: '',
-                    location: '',
-                    linkedin: '',
-                    github: '',
-                    website: '',
-                },
-                skills_list: ['AI', 'Machine Learning', 'Data Analysis'],
-                projects: [
-                    { title: 'Project One', description: 'Describe your first project here.', link: '', imageUrl: '' },
-                    { title: 'Project Two', description: 'Describe your second project here.', link: '', imageUrl: '' },
-                    { title: 'Project Three', description: 'Describe your third project here.', link: '', imageUrl: '' },
-                ],
-                experience_list: ['Add your work experience here, one item per line.'],
-                education_list: ['Add your education here, one item per line.'],
-            }
-        };
-        const newUsers = [...users, newUser];
-        setUsers(newUsers);
-        setCurrentUser(newUser);
-        persistData('leadai_users', newUsers);
-        persistData('leadai_currentUser', newUser);
-        setAuthModal({ isOpen: false, view: 'login' });
-        window.location.hash = `#/profile/${newUser.username}`;
-        return true;
-    }, [users, persistData]);
+    }, []);
 
-    const handleLogin = useCallback((email: string, passwordHash: string): boolean => {
-        const user = users.find(u => u.email === email && u.passwordHash === passwordHash);
-        if (user) {
-            setCurrentUser(user);
-            persistData('leadai_currentUser', user);
+    const handleLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+            });
+
+            if (error) {
+                alert(error.message);
+                return false;
+            }
+
+            // CRITICAL: Check if profile exists. If user verified email but profile wasn't created yet, create it now.
+            if (data.user) {
+                const { data: profile } = await supabase
+                    .from('profiles')
+                    .select('id')
+                    .eq('id', data.user.id)
+                    .single();
+
+                if (!profile) {
+                    // Profile missing - self heal
+                    const metaUsername = data.user.user_metadata?.username || email.split('@')[0];
+                    const defaultPortfolio: PortfolioData = {
+                        tagline: "AI Enthusiast & Lifelong Learner",
+                        about_me: `Hello, I'm ${metaUsername}.`,
+                        profile_image_url: `https://i.pravatar.cc/150?u=${data.user.id}`,
+                        contact: { email: email, phone: '', location: '', linkedin: '', github: '', website: '' },
+                        skills_list: [],
+                        projects: [],
+                        experience_list: [],
+                        education_list: [],
+                    };
+
+                    const { error: insertError } = await supabase.from('profiles').insert([{
+                        id: data.user.id,
+                        username: metaUsername,
+                        email: email,
+                        portfolio: defaultPortfolio
+                    }]);
+                    
+                    if (!insertError) {
+                         // Update local state immediately
+                        setCurrentUser(hydrateUser({
+                             id: data.user.id, 
+                             username: metaUsername, 
+                             email: email, 
+                             portfolio: defaultPortfolio
+                        }));
+                    }
+                }
+            }
+            
             setAuthModal({ isOpen: false, view: 'login' });
             return true;
+        } catch (e: any) {
+            console.error("Login Error:", e);
+            alert("An unexpected error occurred during login.");
+            return false;
         }
-        return false;
-    }, [users, persistData]);
+    }, []);
 
-    const handleLogout = useCallback(() => {
+    const handleLogout = useCallback(async () => {
+        await supabase.auth.signOut();
         setCurrentUser(null);
-        localStorage.removeItem('leadai_currentUser');
         window.location.hash = '#';
     }, []);
 
-    const handleUpdateUser = useCallback((currentUsername: string, updates: { username?: string; portfolio?: Partial<PortfolioData> }) => {
-        // Check for username collision before proceeding
-        if (updates.username && updates.username.toLowerCase() !== currentUsername.toLowerCase()) {
-            if (users.some(u => u.username.toLowerCase() === updates.username!.toLowerCase())) {
-                alert('Username is already taken. Please choose another one.');
-                return; // Abort update
+    const handleUpdateUser = useCallback(async (currentUsername: string, updates: { username?: string; portfolio?: Partial<PortfolioData> }) => {
+        if (!currentUser) return;
+
+        // Optimistic UI Update
+        const updatedProfile = {
+            username: updates.username || currentUser.username,
+            portfolio: { ...currentUser.portfolio, ...updates.portfolio }
+        };
+
+        setCurrentUser(prev => prev ? ({ ...prev, ...updatedProfile }) : null);
+
+        // Send to Supabase
+        const { error } = await supabase
+            .from('profiles')
+            .update({ 
+                username: updatedProfile.username, 
+                portfolio: updatedProfile.portfolio 
+            })
+            .eq('id', currentUser.id);
+
+        if (error) {
+            console.error("Error updating profile:", error);
+            alert("Failed to save changes.");
+            // Ideally revert state here if failed
+        } else {
+            fetchCommunity(); // Refresh the main list
+            if (updates.username && updates.username !== currentUsername) {
+                 window.location.hash = `#/profile/${updates.username}`;
             }
         }
     
-        let usernameChanged = false;
-        let newUsername = '';
-    
-        const newUsers = users.map(u => {
-            if (u.username === currentUsername) {
-                const updatedUser = { ...u, portfolio: { ...u.portfolio } };
-    
-                if (updates.username && updates.username !== currentUsername) {
-                    usernameChanged = true;
-                    newUsername = updates.username;
-                    updatedUser.username = updates.username;
-                }
-                if (updates.portfolio) {
-                    updatedUser.portfolio = { ...u.portfolio, ...updates.portfolio };
-                }
-    
-                if (currentUser?.id === u.id) {
-                    setCurrentUser(hydrateUser(updatedUser)); // Re-hydrate to be safe
-                    persistData('leadai_currentUser', updatedUser);
-                }
-                return updatedUser;
-            }
-            return u;
-        });
-    
-        setUsers(newUsers);
-        persistData('leadai_users', newUsers);
-    
-        if (usernameChanged) {
-            window.location.hash = `#/profile/${newUsername}`;
-        }
-    
-    }, [users, currentUser, persistData]);
+    }, [currentUser]);
 
     const renderPage = () => {
+        if (loading) return <div className="h-screen flex items-center justify-center text-white">Loading Community...</div>;
+
         const path = route.replace(/^#\/?/, '').split('/');
         const page = path[0] || 'home';
         const param = path[1];
@@ -230,8 +323,8 @@ const App: React.FC = () => {
             return <CommunityPage users={users} />;
         }
         if (page === 'profile' && param) {
+            // Find user in the loaded users list
             const userToView = users.find(u => u.username.toLowerCase() === param.toLowerCase());
-            // FIX: Corrected typo from `userToVielw` to `userToView`.
             return userToView ? <PortfolioPage user={userToView} currentUser={currentUser} onUpdate={handleUpdateUser} /> : <NotFoundPage />;
         }
         return <HomePage />;
