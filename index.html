@@ -106,11 +106,6 @@
             min-height: 400px;
             position: relative;
         }
-        #animation-container canvas {
-            display: block;
-            width: 100%;
-            height: 100%;
-        }
 
         /* Forms */
         .form-input, .form-textarea, .form-select {
@@ -187,14 +182,12 @@
         .cursor-wait { cursor: wait; }
     </style>
     
-    <!-- Import Map for React 18 and Three.js -->
+    <!-- Import Map for React 18 -->
     <script type="importmap">
     {
       "imports": {
         "react": "https://esm.sh/react@18.2.0",
         "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
-        "three": "https://esm.sh/three@0.160.0",
-        "three/addons/": "https://esm.sh/three@0.160.0/examples/jsm/",
         "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3"
       }
     }
@@ -207,11 +200,6 @@
     <script type="text/babel" data-type="module" data-presets="react">
         import React, { useState, useEffect, useRef, useCallback } from 'react';
         import ReactDOM from 'react-dom/client';
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
-        import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
-        import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
         import { createClient } from '@supabase/supabase-js';
 
         // --- SUPABASE CLIENT ---
@@ -380,178 +368,107 @@
             return <a href={to} onClick={handleClick} {...props}>{children}</a>;
         };
 
-        // OPTIMIZED ThreeAnimation Component
-        const ThreeAnimation = () => {
-            const mountRef = useRef(null);
+        // OPTIMIZED 2D Canvas Animation Component
+        const NeuralNetworkAnimation = () => {
+            const canvasRef = useRef(null);
 
             useEffect(() => {
-                if (!mountRef.current) return;
-
-                const container = mountRef.current;
-                let scene, camera, renderer, composer, controls;
-                let mainGroup, nnGroup;
-                let clock = new THREE.Clock();
-                const allNodes = [];
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                
+                const ctx = canvas.getContext('2d');
                 let animationFrameId;
+                let particles = [];
+                
+                // Config
+                const particleColor = 'rgb(59, 130, 246)'; // Tailwind blue-500
+                const lineColor = '59, 130, 246'; // For rgba
+                const connectionDistance = 150;
+                const moveSpeed = 0.5;
 
                 const init = () => {
-                    scene = new THREE.Scene();
-                    camera = new THREE.PerspectiveCamera(75, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-                    camera.position.z = 15;
-
-                    renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-                    renderer.setSize(container.offsetWidth, container.offsetHeight);
-                    // OPTIMIZATION: Limit pixel ratio to 2 to prevent lag on high-res screens
-                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
-                    container.appendChild(renderer.domElement);
-
-                    controls = new OrbitControls(camera, renderer.domElement);
-                    controls.enableDamping = true;
-                    controls.dampingFactor = 0.05;
-                    controls.minDistance = 8;
-                    controls.maxDistance = 40;
-                    controls.autoRotate = true;
-                    controls.autoRotateSpeed = 0.4;
-                    controls.enableZoom = false;
-                    controls.enablePan = false;
-
-                    mainGroup = new THREE.Group();
-                    scene.add(mainGroup);
-
-                    const glowColor = new THREE.Color(0x3b82f6);
-
-                    // OPTIMIZATION: Reduced complexity of TorusGeometry
-                    const ringMaterial = new THREE.MeshBasicMaterial({ color: glowColor, wireframe: true, transparent: true, opacity: 0.1 });
-                    for (let i = 0; i < 15; i++) {
-                        // Reduced segments from (16, 100) to (8, 40)
-                        const geometry = new THREE.TorusGeometry(6 + Math.random() * 2, 0.01 + Math.random() * 0.03, 8, 40);
-                        const ring = new THREE.Mesh(geometry, ringMaterial);
-                        ring.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
-                        const scale = 0.9 + Math.random() * 0.2;
-                        ring.scale.set(scale, scale, scale);
-                        mainGroup.add(ring);
-                    }
-
-                    // OPTIMIZATION: Reduced particle count from 10,000 to 3,000
-                    const particleCount = 3000; 
-                    const particlesGeometry = new THREE.BufferGeometry();
-                    const posArray = new Float32Array(particleCount * 3);
-                    for (let i = 0; i < particleCount * 3; i++) {
-                        const theta = Math.random() * 2 * Math.PI;
-                        const phi = Math.acos(2 * Math.random() - 1);
-                        const r = 5.5 + Math.random() * 3;
-                        posArray[i * 3 + 0] = r * Math.sin(phi) * Math.cos(theta);
-                        posArray[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
-                        posArray[i * 3 + 2] = r * Math.cos(phi);
-                    }
-                    particlesGeometry.setAttribute('position', new THREE.BufferAttribute(posArray, 3));
-                    const particleMaterial = new THREE.PointsMaterial({ size: 0.03, color: glowColor, transparent: true, opacity: 0.5, blending: THREE.AdditiveBlending, sizeAttenuation: true });
-                    mainGroup.add(new THREE.Points(particlesGeometry, particleMaterial));
-
-                    nnGroup = new THREE.Group();
-                    mainGroup.add(nnGroup);
-                    buildStaticNeuralNetwork();
-
-                    const renderScene = new RenderPass(scene, camera);
-                    const bloomPass = new UnrealBloomPass(new THREE.Vector2(container.offsetWidth, container.offsetHeight), 1.5, 0.4, 0.85);
-                    bloomPass.threshold = 0;
-                    bloomPass.strength = 1.6;
-                    bloomPass.radius = 0.7;
-                    composer = new EffectComposer(renderer);
-                    composer.addPass(renderScene);
-                    composer.addPass(bloomPass);
-
-                    window.addEventListener('resize', onWindowResize, false);
+                    resize();
+                    createParticles();
+                    animate();
                 };
 
-                const buildStaticNeuralNetwork = () => {
-                    const layerDefs = [6, 8, 10, 8, 6];
-                    const layerDistance = 2.0;
-                    // OPTIMIZATION: Reduced sphere segments (16,16 -> 8,8)
-                    const nodeGeometry = new THREE.SphereGeometry(0.1, 8, 8); 
-                    const layers = [];
-
-                    for (let i = 0; i < layerDefs.length; i++) {
-                        const numNodes = layerDefs[i];
-                        const layerZ = -(layerDefs.length - 1) * layerDistance / 2 + i * layerDistance;
-                        const layer = { nodePositions: [] };
-                        for (let j = 0; j < numNodes; j++) {
-                            const angle = (j / numNodes) * Math.PI * 2;
-                            const radius = 1.5 + (numNodes > 8 ? 0.8 : 0);
-                            const x = Math.cos(angle) * radius;
-                            const y = Math.sin(angle) * radius;
-                            const nodeMaterial = new THREE.MeshBasicMaterial({ color: 0x3b82f6 });
-                            const nodeMesh = new THREE.Mesh(nodeGeometry, nodeMaterial);
-                            nodeMesh.position.set(x, y, layerZ);
-                            allNodes.push(nodeMesh);
-                            layer.nodePositions.push(nodeMesh.position);
-                            nnGroup.add(nodeMesh);
-                        }
-                        layers.push(layer);
+                const resize = () => {
+                    if(canvas.parentElement) {
+                        canvas.width = canvas.parentElement.offsetWidth;
+                        canvas.height = canvas.parentElement.offsetHeight;
                     }
-
-                    // OPTIMIZATION: Batch Line Rendering
-                    // Instead of creating hundreds of separate Line objects, create one geometry with all segments.
-                    const linePoints = [];
-                    const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
-                    
-                    for (let i = 0; i < layers.length - 1; i++) {
-                        for (const startPos of layers[i].nodePositions) {
-                            for (const endPos of layers[i + 1].nodePositions) {
-                                linePoints.push(startPos.clone());
-                                linePoints.push(endPos.clone());
-                            }
-                        }
-                    }
-                    
-                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
-                    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
-                    nnGroup.add(lines);
                 };
 
-                const onWindowResize = () => {
-                    if (!container) return;
-                    camera.aspect = container.offsetWidth / container.offsetHeight;
-                    camera.updateProjectionMatrix();
-                    renderer.setSize(container.offsetWidth, container.offsetHeight);
-                    composer.setSize(container.offsetWidth, container.offsetHeight);
+                const createParticles = () => {
+                    const area = canvas.width * canvas.height;
+                    const particleCount = Math.floor(area / 9000); // Density
+                    
+                    particles = [];
+                    for (let i = 0; i < particleCount; i++) {
+                        particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            vx: (Math.random() - 0.5) * moveSpeed,
+                            vy: (Math.random() - 0.5) * moveSpeed,
+                            size: Math.random() * 2 + 1
+                        });
+                    }
                 };
 
                 const animate = () => {
-                    animationFrameId = requestAnimationFrame(animate);
-                    const elapsedTime = clock.getElapsedTime();
-                    mainGroup.rotation.y += 0.0005;
-                    mainGroup.rotation.x += 0.0002;
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    
+                    // Update and draw particles
+                    particles.forEach((p, i) => {
+                        // Move
+                        p.x += p.vx;
+                        p.y += p.vy;
 
-                    // Optimization: only update colors, don't change geometry
-                    allNodes.forEach((node, index) => {
-                        const blink = (Math.sin(elapsedTime * 0.5 + index * 0.5) + 1) / 2;
-                        const scale = 0.5 + blink * 1.2;
-                        node.scale.setScalar(scale);
-                        const hue = 0.6 + (Math.sin(elapsedTime * 0.3 + index * 0.4) + 1) / 2 * 0.25;
-                        (node.material).color.setHSL(hue, 1.0, 0.6 + blink * 0.3);
+                        // Bounce off walls
+                        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                        // Draw dot
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = particleColor;
+                        ctx.fill();
+
+                        // Draw connections
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const p2 = particles[j];
+                            const dx = p.x - p2.x;
+                            const dy = p.y - p2.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < connectionDistance) {
+                                ctx.beginPath();
+                                ctx.strokeStyle = `rgba(${lineColor}, ${1 - dist / connectionDistance})`;
+                                ctx.lineWidth = 1;
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        }
                     });
 
-                    controls.update();
-                    composer.render();
+                    animationFrameId = requestAnimationFrame(animate);
                 };
 
+                window.addEventListener('resize', () => {
+                    resize();
+                    createParticles();
+                });
+                
                 init();
-                animate();
 
                 return () => {
-                    window.removeEventListener('resize', onWindowResize);
+                    window.removeEventListener('resize', resize);
                     cancelAnimationFrame(animationFrameId);
-                    if(renderer) renderer.dispose();
-                    if (container && renderer && renderer.domElement) {
-                        if (container.contains(renderer.domElement)) {
-                            container.removeChild(renderer.domElement);
-                        }
-                    }
                 };
             }, []);
 
-            return <div id="animation-container" ref={mountRef}></div>;
+            return <canvas ref={canvasRef} className="w-full h-full" />;
         };
 
         // AuthModal Component
@@ -726,8 +643,8 @@
                             Discover Our Pillars
                         </Link>
                     </div>
-                    <div className="md:w-1/2 w-full h-[50vh] md:h-auto">
-                        <ThreeAnimation />
+                    <div className="md:w-1/2 w-full h-[50vh] md:h-[600px]">
+                        <NeuralNetworkAnimation />
                     </div>
                 </div>
             </section>
