@@ -13,6 +13,30 @@ import PortfolioPage from './components/PortfolioPage';
 import { User, PortfolioData } from './types';
 import { supabase } from './supabaseClient';
 
+// --- Notification Component ---
+const Notification: React.FC<{ message: string; type: 'success' | 'error'; onClose: () => void }> = ({ message, type, onClose }) => {
+    useEffect(() => {
+        const timer = setTimeout(onClose, 4000);
+        return () => clearTimeout(timer);
+    }, [onClose]);
+
+    return (
+        <div className={`fixed bottom-8 right-8 z-[100] px-6 py-4 rounded-lg shadow-2xl border backdrop-blur-md transition-all duration-300 transform translate-y-0 ${
+            type === 'success' ? 'bg-green-900/80 border-green-500 text-green-100' : 'bg-red-900/80 border-red-500 text-red-100'
+        }`}>
+            <div className="flex items-center gap-3">
+                {type === 'success' ? (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                ) : (
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                )}
+                <p className="font-medium">{message}</p>
+                <button onClick={onClose} className="ml-4 opacity-70 hover:opacity-100">&times;</button>
+            </div>
+        </div>
+    );
+};
+
 const HomePage: React.FC = () => (
     <>
         <Hero />
@@ -78,52 +102,53 @@ const App: React.FC = () => {
     const [currentUser, setCurrentUser] = useState<User | null>(null);
     const [route, setRoute] = useState(window.location.hash);
     const [loading, setLoading] = useState(true);
+    const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
-    // 1. Fetch Users (Community) and Session on Load
+    const showNotification = (message: string, type: 'success' | 'error') => {
+        setNotification({ message, type });
+    };
+
+    // 1. Fetch Users (Community) and Initialize Custom Session
     useEffect(() => {
         const initApp = async () => {
-            // Check for active session
-            const { data: { session } } = await supabase.auth.getSession();
-            
-            if (session && session.user) {
-                // If logged in, fetch their specific profile details
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-                
-                if (profile) {
-                    setCurrentUser(hydrateUser(profile));
+            // Restore session from localStorage since we are using custom auth
+            const storedUserStr = localStorage.getItem('lead_ai_user');
+            if (storedUserStr) {
+                try {
+                    const storedUser = JSON.parse(storedUserStr);
+                    // Optional: Verify if user still exists in DB
+                    const { data } = await supabase
+                        .from('profiles')
+                        .select('id, username, email, portfolio')
+                        .eq('id', storedUser.id)
+                        .single();
+                    
+                    if (data) {
+                        setCurrentUser(hydrateUser(data));
+                    } else {
+                        // User was deleted or data is invalid
+                        localStorage.removeItem('lead_ai_user');
+                    }
+                } catch (e) {
+                    console.error("Failed to restore session", e);
+                    localStorage.removeItem('lead_ai_user');
                 }
             }
 
             // Fetch all community members
-            fetchCommunity();
+            await fetchCommunity();
             setLoading(false);
         };
 
         initApp();
-
-        // Listen for auth changes (login/logout)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-            if (session?.user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('*')
-                    .eq('id', session.user.id)
-                    .single();
-                if (profile) setCurrentUser(hydrateUser(profile));
-            } else {
-                setCurrentUser(null);
-            }
-        });
-
-        return () => subscription.unsubscribe();
     }, []);
 
     const fetchCommunity = async () => {
-        const { data, error } = await supabase.from('profiles').select('*');
+        // Select specific fields as requested: username, email, portfolio
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, username, email, portfolio');
+            
         if (error) {
             console.error('Error fetching community:', error.message, error);
         } else if (data) {
@@ -137,158 +162,117 @@ const App: React.FC = () => {
         return () => window.removeEventListener('hashchange', handleHashChange);
     }, []);
     
-    const handleRegister = useCallback(async (username: string, email: string, password: string): Promise<boolean> => {
+    const handleRegister = useCallback(async (username: string, email: string, password: string): Promise<{success: boolean, message?: string}> => {
         try {
-            // 1. Sign up with Supabase Auth
-            const { data: authData, error: authError } = await supabase.auth.signUp({
-                email,
-                password,
-                options: {
-                    data: {
-                        username: username, // Store username in auth metadata
-                    }
-                }
-            });
-
-            if (authError) {
-                console.error("Registration Error:", authError);
-                alert(`Registration Failed: ${authError.message}`);
-                return false;
+            // 1. Check if email already exists in profiles
+            const { data: existingUsers } = await supabase
+                .from('profiles')
+                .select('email')
+                .eq('email', email);
+                
+            if (existingUsers && existingUsers.length > 0) {
+                return { success: false, message: "User already registered. Please login." };
             }
 
-            if (authData.user) {
-                // Check if we have a session. If no session, email confirmation is likely required.
-                if (!authData.session) {
-                    alert("Registration successful! Please check your email to confirm your account.");
-                    setAuthModal({ isOpen: false, view: 'login' });
-                    return true;
-                }
+            // 2. Generate ID and Prepare Profile Data
+            const newId = crypto.randomUUID();
+            
+            const newPortfolio: PortfolioData = {
+                tagline: "AI Enthusiast & Lifelong Learner",
+                about_me: `Hello, I'm ${username}. I'm new here!`,
+                profile_image_url: `https://i.pravatar.cc/150?u=${newId}`,
+                contact: { email, phone: '', location: '', linkedin: '', github: '', website: '' },
+                skills_list: ['AI', 'Machine Learning'],
+                projects: [],
+                experience_list: [],
+                education_list: [],
+            };
 
-                // 2. Prepare Profile Data
-                const newPortfolio: PortfolioData = {
-                    tagline: "AI Enthusiast & Lifelong Learner",
-                    about_me: `Hello, I'm ${username}. I'm new here!`,
-                    profile_image_url: `https://i.pravatar.cc/150?u=${authData.user.id}`,
-                    contact: { email, phone: '', location: '', linkedin: '', github: '', website: '' },
-                    skills_list: ['AI', 'Machine Learning'],
-                    projects: [],
-                    experience_list: [],
-                    education_list: [],
-                };
+            // 3. Insert into profiles with 'pass' column
+            const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ 
+                    id: newId, 
+                    username: username, 
+                    email: email, 
+                    pass: password, // Saving password in 'pass' column as requested
+                    portfolio: newPortfolio 
+                }]);
 
-                // 3. Create or Update Profile using Upsert
-                // This handles race conditions if a trigger already created the profile
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .upsert({ 
-                        id: authData.user.id, 
-                        username: username, 
-                        email: email, 
-                        portfolio: newPortfolio 
-                    }, { onConflict: 'id' });
-
-                if (profileError) {
-                    console.error("Error saving profile:", profileError);
-                    alert(`Account created, but profile setup failed: ${profileError.message}`);
-                }
-
-                // Success
-                setAuthModal({ isOpen: false, view: 'login' });
-                await fetchCommunity(); // Refresh the list
-                
-                // Navigate to profile
-                setTimeout(() => {
-                    window.location.hash = `#/profile/${username}`;
-                }, 100);
-                
-                return true;
+            if (insertError) {
+                console.error("Error creating profile:", insertError);
+                return { success: false, message: insertError.message };
             }
-            return false;
+
+            // 4. Auto Login & Persist Session
+            const newUser = hydrateUser({ id: newId, username, email, portfolio: newPortfolio });
+            setCurrentUser(newUser);
+            localStorage.setItem('lead_ai_user', JSON.stringify(newUser));
+
+            setAuthModal({ isOpen: false, view: 'login' });
+            showNotification("Registration successful! Welcome aboard.", 'success');
+            
+            await fetchCommunity();
+            
+            setTimeout(() => {
+                window.location.hash = `#/profile/${username}`;
+            }, 100);
+            
+            return { success: true };
         } catch (e: any) {
             console.error("Unexpected error during registration:", e);
-            alert(`An unexpected error occurred: ${e.message || e}`);
-            return false;
+            return { success: false, message: e.message || "Unexpected error occurred" };
         }
     }, []);
 
-    const handleLogin = useCallback(async (email: string, password: string): Promise<boolean> => {
+    const handleLogin = useCallback(async (email: string, password: string): Promise<{success: boolean, message?: string}> => {
         try {
-            const { data, error } = await supabase.auth.signInWithPassword({
-                email,
-                password,
-            });
+            // Query profiles directly using 'pass' column
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('id, username, email, portfolio')
+                .eq('email', email)
+                .eq('pass', password);
 
             if (error) {
-                alert(error.message);
-                return false;
+                return { success: false, message: error.message };
             }
 
-            // CRITICAL: Check if profile exists. If user verified email but profile wasn't created yet, create it now.
-            if (data.user) {
-                const { data: profile } = await supabase
-                    .from('profiles')
-                    .select('id')
-                    .eq('id', data.user.id)
-                    .single();
-
-                if (!profile) {
-                    // Profile missing - self heal
-                    const metaUsername = data.user.user_metadata?.username || email.split('@')[0];
-                    const defaultPortfolio: PortfolioData = {
-                        tagline: "AI Enthusiast & Lifelong Learner",
-                        about_me: `Hello, I'm ${metaUsername}.`,
-                        profile_image_url: `https://i.pravatar.cc/150?u=${data.user.id}`,
-                        contact: { email: email, phone: '', location: '', linkedin: '', github: '', website: '' },
-                        skills_list: [],
-                        projects: [],
-                        experience_list: [],
-                        education_list: [],
-                    };
-
-                    const { error: insertError } = await supabase.from('profiles').insert([{
-                        id: data.user.id,
-                        username: metaUsername,
-                        email: email,
-                        portfolio: defaultPortfolio
-                    }]);
-                    
-                    if (!insertError) {
-                         // Update local state immediately
-                        setCurrentUser(hydrateUser({
-                             id: data.user.id, 
-                             username: metaUsername, 
-                             email: email, 
-                             portfolio: defaultPortfolio
-                        }));
-                    }
-                }
+            // Handle case where user is not found (empty array)
+            if (!data || data.length === 0) {
+                return { success: false, message: "User not registered. Please check email and password or sign up." };
             }
+
+            // Login successful
+            const user = hydrateUser(data[0]);
+            setCurrentUser(user);
+            localStorage.setItem('lead_ai_user', JSON.stringify(user)); // Persist session
             
             setAuthModal({ isOpen: false, view: 'login' });
-            return true;
+            showNotification("Successfully logged in!", 'success');
+            return { success: true };
         } catch (e: any) {
             console.error("Login Error:", e);
-            alert("An unexpected error occurred during login.");
-            return false;
+            return { success: false, message: "An unexpected error occurred." };
         }
     }, []);
 
     const handleLogout = useCallback(async () => {
-        await supabase.auth.signOut();
+        // Clear custom session
+        localStorage.removeItem('lead_ai_user');
         setCurrentUser(null);
         window.location.hash = '#';
+        showNotification("Logged out successfully", 'success');
     }, []);
 
-    const handleUpdateUser = useCallback(async (currentUsername: string, updates: { username?: string; portfolio?: Partial<PortfolioData> }) => {
-        if (!currentUser) return;
+    const handleUpdateUser = useCallback(async (currentUsername: string, updates: { username?: string; portfolio?: Partial<PortfolioData> }): Promise<boolean> => {
+        if (!currentUser) return false;
 
         // Optimistic UI Update
         const updatedProfile = {
             username: updates.username || currentUser.username,
             portfolio: { ...currentUser.portfolio, ...updates.portfolio }
         };
-
-        setCurrentUser(prev => prev ? ({ ...prev, ...updatedProfile }) : null);
 
         // Send to Supabase
         const { error } = await supabase
@@ -301,13 +285,21 @@ const App: React.FC = () => {
 
         if (error) {
             console.error("Error updating profile:", error);
-            alert("Failed to save changes.");
-            // Ideally revert state here if failed
+            showNotification("Failed to save changes. Please try again.", 'error');
+            return false;
         } else {
-            fetchCommunity(); // Refresh the main list
+            const newUserData = { ...currentUser, ...updatedProfile };
+            setCurrentUser(newUserData);
+            // Update stored session as well
+            localStorage.setItem('lead_ai_user', JSON.stringify(newUserData));
+            
+            showNotification("Profile updated successfully!", 'success');
+            
+            await fetchCommunity(); // Refresh the main list
             if (updates.username && updates.username !== currentUsername) {
                  window.location.hash = `#/profile/${updates.username}`;
             }
+            return true;
         }
     
     }, [currentUser]);
@@ -349,6 +341,13 @@ const App: React.FC = () => {
                     onRegister={handleRegister}
                     onLogin={handleLogin}
                     onClose={() => setAuthModal({isOpen: false, view: 'login'})}
+                />
+            )}
+            {notification && (
+                <Notification 
+                    message={notification.message} 
+                    type={notification.type} 
+                    onClose={() => setNotification(null)} 
                 />
             )}
         </>

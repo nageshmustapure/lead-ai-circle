@@ -4,8 +4,8 @@ import React, { useState, FormEvent } from 'react';
 interface AuthModalProps {
     initialView: 'login' | 'register';
     onClose: () => void;
-    onRegister: (username: string, email: string, password: string) => Promise<boolean>;
-    onLogin: (email: string, password: string) => Promise<boolean>;
+    onRegister: (username: string, email: string, password: string) => Promise<{success: boolean, message?: string}>;
+    onLogin: (email: string, password: string) => Promise<{success: boolean, message?: string}>;
 }
 
 const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister, onLogin }) => {
@@ -21,33 +21,36 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister,
         setError('');
         setLoading(true);
 
-        if (view === 'register') {
-            if (!username || !email || !password) {
-                setError('All fields are required.');
-                setLoading(false);
-                return;
-            }
-            if (password.length < 6) {
-                setError('Password must be at least 6 characters long.');
-                setLoading(false);
-                return;
-            }
-            const success = await onRegister(username, email, password);
-            if (!success) {
-                // Error is handled in alert in App.tsx, but we can set generic error here
-                // setError("Registration failed."); 
-            }
+        try {
+            if (view === 'register') {
+                if (!username || !email || !password) {
+                    setError('All fields are required.');
+                    setLoading(false);
+                    return;
+                }
+                if (password.length < 6) {
+                    setError('Password must be at least 6 characters long.');
+                    setLoading(false);
+                    return;
+                }
+                const result = await onRegister(username, email, password);
+                if (!result.success) {
+                     setError(result.message || "Registration failed."); 
+                }
 
-        } else {
-             if (!email || !password) {
-                setError('All fields are required.');
-                setLoading(false);
-                return;
+            } else {
+                 if (!email || !password) {
+                    setError('All fields are required.');
+                    setLoading(false);
+                    return;
+                }
+                const result = await onLogin(email, password);
+                if (!result.success) {
+                    setError(result.message || "Invalid credentials.");
+                }
             }
-            const success = await onLogin(email, password);
-            if (!success) {
-                // setError("Invalid credentials.");
-            }
+        } catch (e) {
+            setError("An unexpected error occurred.");
         }
         setLoading(false);
     };
@@ -105,9 +108,17 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister,
                         />
                         {view === 'register' && <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters</p>}
                     </div>
-                    {error && <p className="text-red-400 text-sm">{error}</p>}
-                    <button type="submit" disabled={loading} className="w-full btn-primary mt-2 disabled:opacity-50 disabled:cursor-not-allowed">
-                        {loading ? 'Processing...' : (view === 'register' ? 'Register' : 'Login')}
+                    {error && <p className="text-red-400 text-sm bg-red-900/30 p-2 rounded border border-red-800/50">{error}</p>}
+                    <button type="submit" disabled={loading} className="w-full btn-primary mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center">
+                        {loading ? (
+                             <>
+                                <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Processing...
+                            </>
+                        ) : (view === 'register' ? 'Register' : 'Login')}
                     </button>
                 </form>
 
@@ -115,7 +126,10 @@ const AuthModal: React.FC<AuthModalProps> = ({ initialView, onClose, onRegister,
                     <p className="text-slate-400">
                         {view === 'register' ? 'Already have an account?' : "Don't have an account?"}
                         <button 
-                            onClick={() => setView(view === 'register' ? 'login' : 'register')}
+                            onClick={() => {
+                                setView(view === 'register' ? 'login' : 'register');
+                                setError('');
+                            }}
                             className="font-semibold text-blue-400 hover:text-blue-300 ml-2"
                         >
                             {view === 'register' ? 'Login' : 'Sign Up'}
