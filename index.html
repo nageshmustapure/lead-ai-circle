@@ -380,7 +380,7 @@
             return <a href={to} onClick={handleClick} {...props}>{children}</a>;
         };
 
-        // ThreeAnimation Component
+        // OPTIMIZED ThreeAnimation Component
         const ThreeAnimation = () => {
             const mountRef = useRef(null);
 
@@ -401,7 +401,8 @@
 
                     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
                     renderer.setSize(container.offsetWidth, container.offsetHeight);
-                    renderer.setPixelRatio(window.devicePixelRatio);
+                    // OPTIMIZATION: Limit pixel ratio to 2 to prevent lag on high-res screens
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); 
                     container.appendChild(renderer.domElement);
 
                     controls = new OrbitControls(camera, renderer.domElement);
@@ -419,9 +420,11 @@
 
                     const glowColor = new THREE.Color(0x3b82f6);
 
+                    // OPTIMIZATION: Reduced complexity of TorusGeometry
                     const ringMaterial = new THREE.MeshBasicMaterial({ color: glowColor, wireframe: true, transparent: true, opacity: 0.1 });
                     for (let i = 0; i < 15; i++) {
-                        const geometry = new THREE.TorusGeometry(6 + Math.random() * 2, 0.01 + Math.random() * 0.03, 16, 100);
+                        // Reduced segments from (16, 100) to (8, 40)
+                        const geometry = new THREE.TorusGeometry(6 + Math.random() * 2, 0.01 + Math.random() * 0.03, 8, 40);
                         const ring = new THREE.Mesh(geometry, ringMaterial);
                         ring.rotation.set(Math.random() * Math.PI, Math.random() * Math.PI, Math.random() * Math.PI);
                         const scale = 0.9 + Math.random() * 0.2;
@@ -429,9 +432,11 @@
                         mainGroup.add(ring);
                     }
 
+                    // OPTIMIZATION: Reduced particle count from 10,000 to 3,000
+                    const particleCount = 3000; 
                     const particlesGeometry = new THREE.BufferGeometry();
-                    const posArray = new Float32Array(10000 * 3);
-                    for (let i = 0; i < 10000 * 3; i++) {
+                    const posArray = new Float32Array(particleCount * 3);
+                    for (let i = 0; i < particleCount * 3; i++) {
                         const theta = Math.random() * 2 * Math.PI;
                         const phi = Math.acos(2 * Math.random() - 1);
                         const r = 5.5 + Math.random() * 3;
@@ -462,7 +467,8 @@
                 const buildStaticNeuralNetwork = () => {
                     const layerDefs = [6, 8, 10, 8, 6];
                     const layerDistance = 2.0;
-                    const nodeGeometry = new THREE.SphereGeometry(0.1, 16, 16);
+                    // OPTIMIZATION: Reduced sphere segments (16,16 -> 8,8)
+                    const nodeGeometry = new THREE.SphereGeometry(0.1, 8, 8); 
                     const layers = [];
 
                     for (let i = 0; i < layerDefs.length; i++) {
@@ -484,18 +490,27 @@
                         layers.push(layer);
                     }
 
+                    // OPTIMIZATION: Batch Line Rendering
+                    // Instead of creating hundreds of separate Line objects, create one geometry with all segments.
+                    const linePoints = [];
                     const lineMaterial = new THREE.LineBasicMaterial({ color: 0x3b82f6, transparent: true, opacity: 0.15, blending: THREE.AdditiveBlending });
+                    
                     for (let i = 0; i < layers.length - 1; i++) {
                         for (const startPos of layers[i].nodePositions) {
                             for (const endPos of layers[i + 1].nodePositions) {
-                                const geometry = new THREE.BufferGeometry().setFromPoints([startPos, endPos]);
-                                nnGroup.add(new THREE.Line(geometry, lineMaterial));
+                                linePoints.push(startPos.clone());
+                                linePoints.push(endPos.clone());
                             }
                         }
                     }
+                    
+                    const lineGeometry = new THREE.BufferGeometry().setFromPoints(linePoints);
+                    const lines = new THREE.LineSegments(lineGeometry, lineMaterial);
+                    nnGroup.add(lines);
                 };
 
                 const onWindowResize = () => {
+                    if (!container) return;
                     camera.aspect = container.offsetWidth / container.offsetHeight;
                     camera.updateProjectionMatrix();
                     renderer.setSize(container.offsetWidth, container.offsetHeight);
@@ -508,6 +523,7 @@
                     mainGroup.rotation.y += 0.0005;
                     mainGroup.rotation.x += 0.0002;
 
+                    // Optimization: only update colors, don't change geometry
                     allNodes.forEach((node, index) => {
                         const blink = (Math.sin(elapsedTime * 0.5 + index * 0.5) + 1) / 2;
                         const scale = 0.5 + blink * 1.2;
