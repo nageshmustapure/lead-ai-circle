@@ -1,0 +1,1396 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead AI - Master AI Before AI Masters You</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- Fonts including Poppins for Community/Founders -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Poppins:wght@300;400;600;700;800&display=swap"
+        rel="stylesheet">
+    <!-- Remix Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+
+    <!-- Babel for in-browser compilation -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+    <style>
+        /* --- CORE STYLES (Original) --- */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0d122c;
+            color: #e2e8f0;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Glow Effects */
+        body::before,
+        body::after {
+            content: '';
+            position: fixed;
+            border-radius: 50%;
+            background-color: #FD3A4A;
+            filter: blur(80px);
+            z-index: -15;
+            opacity: 0.3;
+            pointer-events: none;
+        }
+
+        body::before {
+            width: 350px;
+            height: 350px;
+            top: -120px;
+            right: -120px;
+        }
+
+        body::after {
+            width: 300px;
+            height: 300px;
+            bottom: -150px;
+            left: -150px;
+        }
+
+        /* Typography & Components */
+        .hero-gradient-text {
+            background: linear-gradient(to right, #3b82f6, #ec4899);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        /* --- COMMUNITY & FOUNDERS CARD STYLES --- */
+        /* These styles are shared between Community and Founders components */
+        .community-card {
+            background: linear-gradient(180deg, rgba(30, 35, 60, 0.7) 0%, rgba(15, 20, 35, 0.9) 100%);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 24px;
+            padding: 2.5rem 1.5rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+            text-decoration: none;
+            /* For link usage */
+        }
+
+        .community-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(100, 200, 255, 0.3);
+            box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), 0 0 20px rgba(0, 200, 255, 0.15);
+        }
+
+        .community-card::before {
+            content: '';
+            position: absolute;
+            top: -50px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 150px;
+            background: radial-gradient(circle, rgba(0, 200, 255, 0.15) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        /* Avatar Ring */
+        .avatar-glow-ring {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            padding: 2px;
+            background: linear-gradient(180deg, #00ffff, #0088ff, #9d00ff);
+            box-shadow: 0 0 20px rgba(0, 160, 255, 0.4);
+            margin-bottom: 1.25rem;
+            position: relative;
+            z-index: 10;
+        }
+
+        .avatar-inner {
+            width: 100%;
+            height: 100%;
+            background: #0d122c;
+            border-radius: 50%;
+            padding: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .community-avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        /* Typography for Cards */
+        .community-name {
+            color: #ffffff;
+            font-weight: 700;
+            font-size: 1.25rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .community-role {
+            color: #94a3b8;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        /* Original Card Bg for other sections */
+        .card-bg {
+            background-color: rgba(17, 24, 39, 0.6);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .card-bg:hover {
+            border-color: rgba(253, 58, 74, 0.5);
+            box-shadow: 0 0 20px rgba(253, 58, 74, 0.2);
+        }
+
+        #animation-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            position: relative;
+        }
+
+        /* Forms */
+        .form-input,
+        .form-textarea,
+        .form-select {
+            background-color: rgba(30, 41, 59, 0.7);
+            border: 1px solid #334155;
+            color: #e2e8f0;
+            transition: all 0.2s ease-in-out;
+            width: 100%;
+            padding: 0.75rem 1rem;
+            border-radius: 0.5rem;
+        }
+
+        .form-input:focus,
+        .form-textarea:focus,
+        .form-select:focus {
+            outline: none;
+            border-color: #FD3A4A;
+            box-shadow: 0 0 0 2px rgba(253, 58, 74, 0.4);
+        }
+
+        /* Buttons */
+        .btn {
+            color: #fff;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: 1px solid transparent;
+            cursor: pointer;
+        }
+
+        .btn-primary {
+            background-color: #FD3A4A;
+            border-color: #FD3A4A;
+        }
+
+        .btn-primary:hover {
+            background-color: #e62b3a;
+            border-color: #e62b3a;
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: transparent;
+            border-color: #4b5563;
+        }
+
+        .btn-secondary:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #6b7280;
+        }
+
+        .section-heading {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #f1f5f9;
+            margin-bottom: 2.5rem;
+            text-align: left;
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+
+        .section-heading::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 40px;
+            height: 3px;
+            background-color: #FD3A4A;
+            border-radius: 2px;
+        }
+
+        /* Utilities */
+        .cursor-wait {
+            cursor: wait;
+        }
+
+        /* --- BARLEY THEME (Portfolio Component) --- */
+        .barley-wrapper {
+            background-color: #050505;
+            background-image:
+                radial-gradient(circle at 90% 10%, rgba(255, 46, 99, 0.08) 0%, transparent 40%),
+                radial-gradient(circle at 10% 90%, rgba(255, 46, 99, 0.05) 0%, transparent 40%);
+            color: #ffffff;
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            width: 100%;
+        }
+
+        .barley-highlight {
+            color: #ff2e63;
+            background: linear-gradient(45deg, #ff2e63, #ff6b9d);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .barley-card {
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 12px;
+            padding: 30px;
+            transition: 0.4s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .barley-card:hover {
+            border-color: rgba(255, 46, 99, 0.3);
+            transform: translateY(-5px);
+        }
+
+        .barley-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4px;
+            height: 100%;
+            background: #ff2e63;
+            opacity: 0.7;
+        }
+
+        .barley-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 30px;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            gap: 8px;
+        }
+
+        .barley-btn-primary {
+            background: #ff2e63;
+            color: white;
+            box-shadow: 0 5px 20px rgba(255, 46, 99, 0.3);
+        }
+
+        .barley-btn-primary:hover {
+            background: transparent;
+            color: #ff2e63;
+            box-shadow: none;
+            outline: 2px solid #ff2e63;
+        }
+
+        .barley-btn-secondary {
+            background: transparent;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .barley-btn-secondary:hover {
+            border-color: #ff2e63;
+            color: #ff2e63;
+        }
+
+        .barley-input,
+        .barley-textarea {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: white;
+            border-radius: 6px;
+            padding: 10px;
+            width: 100%;
+            outline: none;
+            transition: 0.3s;
+        }
+
+        .barley-input:focus,
+        .barley-textarea:focus {
+            border-color: #ff2e63;
+            background: rgba(255, 46, 99, 0.05);
+        }
+    </style>
+
+    <!-- Import Map for React 18 -->
+    <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+        "@supabase/supabase-js": "https://esm.sh/@supabase/supabase-js@2.39.3"
+      }
+    }
+    </script>
+</head>
+
+<body class="antialiased">
+    <div id="root"></div>
+
+    <!-- MAIN APPLICATION SCRIPT -->
+    <script type="text/babel" data-type="module" data-presets="react">
+        import React, { useState, useEffect, useRef, useCallback } from 'react';
+        import ReactDOM from 'react-dom/client';
+        import { createClient } from '@supabase/supabase-js';
+
+        // --- SUPABASE CLIENT ---
+        const supabaseUrl = 'https://svnyshizkoaqzchkyoyq.supabase.co';
+        const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2bnlzaGl6a29hcXpjaGt5b3lxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM4MDIzNjEsImV4cCI6MjA3OTM3ODM2MX0.v8bggKp_4Aiiw-sfV5QVVOINMDzPazfVzCIynnTC9Ss';
+        const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
+        // --- ICONS (Original System Icons) ---
+        const iconClass = "w-12 h-12 text-blue-500";
+
+        const ToolIcon = () => (
+            <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+            </svg>
+        );
+
+        const BreakthroughIcon = () => (
+            <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+            </svg>
+        );
+
+        const TrenchesIcon = () => (
+            <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+            </svg>
+        );
+
+        const QnaIcon = () => (
+            <svg className={iconClass} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+            </svg>
+        );
+
+        // --- CONSTANTS ---
+        const FOUNDING_MEMBERS = [
+            {
+                name: "Nagesh Mustapure",
+                title: "Data Scientist",
+                experience: "6+ years in Data Science",
+                company: "Avira Digital",
+                imageUrl: "https://picsum.photos/seed/nagesh/128/128"
+            },
+            {
+                name: "Dipak Gudal",
+                title: "Data Scientist",
+                experience: "4+ years of experience",
+                imageUrl: "https://picsum.photos/seed/dipak/128/128"
+            },
+            {
+                name: "Nikhil Avsula",
+                title: "Software Engineer",
+                experience: "3+ years of experience",
+                company: "Avira Digital",
+                imageUrl: "https://picsum.photos/seed/nikhil/128/128"
+            },
+            {
+                name: "Aishwarya K.",
+                title: "Data Scientist",
+                experience: "5+ years of experience",
+                imageUrl: "https://picsum.photos/seed/aishwarya/128/128"
+            }
+        ];
+
+        const PILLARS = [
+            {
+                id: "spotlight",
+                title: "AI Tool Spotlight",
+                description: "Hands-on demos of cutting-edge AI tools. We stress-test new applications to decide if a tool is hype or a must-have.",
+                icon: <ToolIcon />,
+                gridClass: "md:col-span-2 md:row-span-2 flex flex-col justify-center"
+            },
+            {
+                id: "breakthroughs",
+                title: "Breakthroughs & Frameworks",
+                description: "Decoding foundational changes in the AI landscape—new models, framework updates, and paradigm shifts.",
+                icon: <BreakthroughIcon />,
+                gridClass: "md:col-span-2"
+            },
+            {
+                id: "trenches",
+                title: "In the Trenches",
+                description: "Real problems, proven solutions. Learn from a shared library of battle-tested fixes.",
+                icon: <TrenchesIcon />,
+                gridClass: "md:col-span-1"
+            },
+            {
+                id: "qna",
+                title: "Mastermind Q&A",
+                description: "Unscripted, unfiltered, and unstuck. Get direct feedback from expert perspectives.",
+                icon: <QnaIcon />,
+                gridClass: "md:col-span-1"
+            }
+        ];
+
+        // --- COMPONENTS ---
+
+        // Link Component
+        const Link = ({ to, children, ...props }) => {
+            const handleClick = (event) => {
+                event.preventDefault();
+                if (to.startsWith('#/') || to === '#') {
+                    window.location.hash = to;
+                } else if (to.startsWith('#')) {
+                    const targetId = to.substring(1);
+                    const element = document.getElementById(targetId);
+                    if (element) {
+                        element.scrollIntoView({ behavior: 'smooth' });
+                    } else {
+                        window.location.hash = '#';
+                        setTimeout(() => {
+                            const homeElement = document.getElementById(targetId);
+                            homeElement?.scrollIntoView({ behavior: 'smooth' });
+                        }, 100);
+                    }
+                }
+            };
+            return <a href={to} onClick={handleClick} {...props}>{children}</a>;
+        };
+
+        // OPTIMIZED 2D Canvas Animation Component
+        const NeuralNetworkAnimation = () => {
+            const canvasRef = useRef(null);
+
+            useEffect(() => {
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+
+                const ctx = canvas.getContext('2d');
+                let animationFrameId;
+                let particles = [];
+
+                // Config
+                const particleColor = 'rgb(59, 130, 246)'; // Tailwind blue-500
+                const lineColor = '59, 130, 246'; // For rgba
+                const connectionDistance = 150;
+                const moveSpeed = 0.5;
+
+                const init = () => {
+                    resize();
+                    createParticles();
+                    animate();
+                };
+
+                const resize = () => {
+                    if (canvas.parentElement) {
+                        canvas.width = canvas.parentElement.offsetWidth;
+                        canvas.height = canvas.parentElement.offsetHeight;
+                    }
+                };
+
+                const createParticles = () => {
+                    const area = canvas.width * canvas.height;
+                    const particleCount = Math.floor(area / 9000); // Density
+
+                    particles = [];
+                    for (let i = 0; i < particleCount; i++) {
+                        particles.push({
+                            x: Math.random() * canvas.width,
+                            y: Math.random() * canvas.height,
+                            vx: (Math.random() - 0.5) * moveSpeed,
+                            vy: (Math.random() - 0.5) * moveSpeed,
+                            size: Math.random() * 2 + 1
+                        });
+                    }
+                };
+
+                const animate = () => {
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                    // Update and draw particles
+                    particles.forEach((p, i) => {
+                        // Move
+                        p.x += p.vx;
+                        p.y += p.vy;
+
+                        // Bounce off walls
+                        if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                        if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+
+                        // Draw dot
+                        ctx.beginPath();
+                        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                        ctx.fillStyle = particleColor;
+                        ctx.fill();
+
+                        // Draw connections
+                        for (let j = i + 1; j < particles.length; j++) {
+                            const p2 = particles[j];
+                            const dx = p.x - p2.x;
+                            const dy = p.y - p2.y;
+                            const dist = Math.sqrt(dx * dx + dy * dy);
+
+                            if (dist < connectionDistance) {
+                                ctx.beginPath();
+                                ctx.strokeStyle = `rgba(${lineColor}, ${1 - dist / connectionDistance})`;
+                                ctx.lineWidth = 1;
+                                ctx.moveTo(p.x, p.y);
+                                ctx.lineTo(p2.x, p2.y);
+                                ctx.stroke();
+                            }
+                        }
+                    });
+
+                    animationFrameId = requestAnimationFrame(animate);
+                };
+
+                window.addEventListener('resize', () => {
+                    resize();
+                    createParticles();
+                });
+
+                init();
+
+                return () => {
+                    window.removeEventListener('resize', resize);
+                    cancelAnimationFrame(animationFrameId);
+                };
+            }, []);
+
+            return <canvas ref={canvasRef} className="w-full h-full" />;
+        };
+
+        // AuthModal Component
+        const AuthModal = ({ initialView, onClose, onRegister, onLogin }) => {
+            const [view, setView] = useState(initialView);
+            const [email, setEmail] = useState('');
+            const [username, setUsername] = useState('');
+            const [password, setPassword] = useState('');
+            const [error, setError] = useState('');
+            const [loading, setLoading] = useState(false);
+
+            // Track mounted state to avoid setting state after unmount
+            const isMounted = useRef(true);
+            useEffect(() => {
+                return () => { isMounted.current = false; };
+            }, []);
+
+            const handleSubmit = async (e) => {
+                e.preventDefault();
+                setError('');
+                setLoading(true);
+
+                try {
+                    if (view === 'register') {
+                        if (!username || !email || !password) {
+                            if (isMounted.current) {
+                                setError('All fields are required.');
+                                setLoading(false);
+                            }
+                            return;
+                        }
+                        if (password.length < 6) {
+                            if (isMounted.current) {
+                                setError('Password must be at least 6 characters long.');
+                                setLoading(false);
+                            }
+                            return;
+                        }
+                        const result = await onRegister(username, email, password);
+                        if (isMounted.current) {
+                            if (!result.success) {
+                                setError(result.message || "Registration failed.");
+                                setLoading(false);
+                            } else {
+                                // Success implies unmount, so we do nothing
+                            }
+                        }
+                    } else {
+                        if (!email || !password) {
+                            if (isMounted.current) {
+                                setError('All fields are required.');
+                                setLoading(false);
+                            }
+                            return;
+                        }
+                        const result = await onLogin(email, password);
+                        if (isMounted.current) {
+                            if (!result.success) {
+                                setError(result.message || "Invalid credentials.");
+                                setLoading(false);
+                            } else {
+                                // Success implies unmount
+                            }
+                        }
+                    }
+                } catch (e) {
+                    if (isMounted.current) {
+                        setError("An unexpected error occurred.");
+                        setLoading(false);
+                    }
+                }
+            };
+
+            return (
+                <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-[100]" onClick={onClose}>
+                    <div className="card-bg w-full max-w-md p-8 rounded-2xl border border-slate-700 shadow-2xl" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex justify-between items-center mb-6">
+                            <h2 className="text-3xl font-bold text-slate-100">
+                                {view === 'register' ? 'Create Account' : 'Welcome Back'}
+                            </h2>
+                            <button onClick={onClose} className="text-slate-400 hover:text-white">&times;</button>
+                        </div>
+                        <form onSubmit={handleSubmit} className="space-y-4">
+                            {view === 'register' && (
+                                <div>
+                                    <label className="block text-slate-400 mb-1" htmlFor="username">Username</label>
+                                    <input id="username" type="text" value={username} onChange={(e) => setUsername(e.target.value)} className="form-input" placeholder="Choose a username" />
+                                </div>
+                            )}
+                            <div>
+                                <label className="block text-slate-400 mb-1" htmlFor="email">Email</label>
+                                <input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="form-input" placeholder="you@example.com" />
+                            </div>
+                            <div>
+                                <label className="block text-slate-400 mb-1" htmlFor="password">Password</label>
+                                <input id="password" type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="form-input" placeholder="••••••••" />
+                                {view === 'register' && <p className="text-xs text-slate-500 mt-1">Must be at least 6 characters</p>}
+                            </div>
+                            {error && <p className="text-red-400 text-sm bg-red-900/30 p-2 rounded border border-red-800/50">{error}</p>}
+                            <button type="submit" disabled={loading} className="w-full btn-primary mt-2 disabled:opacity-50 disabled:cursor-not-allowed flex justify-center items-center">
+                                {loading ? 'Processing...' : (view === 'register' ? 'Register' : 'Login')}
+                            </button>
+                        </form>
+                        <div className="mt-6 text-center">
+                            <p className="text-slate-400">
+                                {view === 'register' ? 'Already have an account?' : "Don't have an account?"}
+                                <button onClick={() => { setView(view === 'register' ? 'login' : 'register'); setError(''); }} className="font-semibold text-blue-400 hover:text-blue-300 ml-2">
+                                    {view === 'register' ? 'Login' : 'Sign Up'}
+                                </button>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            );
+        };
+
+        // Header Component
+        const Header = ({ currentUser, onLoginClick, onRegisterClick, onLogout }) => {
+            const navLinks = [
+                { href: "#mission", label: "Mission" },
+                { href: "#pillars", label: "Pillars" },
+                { href: "#founding-members", label: "Founders" },
+                { href: "#/community", label: "Community" }
+            ];
+
+            return (
+                <header className="fixed top-0 left-0 right-0 z-50 bg-black/30 backdrop-blur-md border-b border-slate-800">
+                    <div className="container mx-auto px-6 py-4 flex justify-between items-center">
+                        <Link to="#" className="text-2xl font-bold tracking-tighter hero-gradient-text">Lead AI</Link>
+                        <div className="flex items-center gap-8">
+                            <nav className="hidden md:flex space-x-8">
+                                {navLinks.map((link) => (
+                                    <Link key={link.href} to={link.href} className="text-slate-300 hover:text-blue-400 transition-colors duration-300">
+                                        {link.label}
+                                    </Link>
+                                ))}
+                            </nav>
+                            <div className="flex items-center gap-4">
+                                {currentUser ? (
+                                    <>
+                                        <Link to={`#/profile/${currentUser.username}`} className="text-slate-100 font-semibold hover:text-blue-400 transition-colors">
+                                            {currentUser.username}
+                                        </Link>
+                                        <button onClick={onLogout} className="bg-slate-700 hover:bg-slate-600 text-sm text-white font-bold py-2 px-4 rounded-lg transition-colors">
+                                            Logout
+                                        </button>
+                                    </>
+                                ) : (
+                                    <>
+                                        <button onClick={onLoginClick} className="text-slate-300 hover:text-white transition-colors">Login</button>
+                                        <button onClick={onRegisterClick} className="bg-slate-100 text-slate-900 font-bold px-4 py-2 rounded-lg text-sm hover:bg-slate-200 transition-transform duration-300 hover:scale-105">Sign Up</button>
+                                    </>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </header>
+            );
+        };
+
+        // Hero Component
+        const Hero = () => (
+            <section id="home" className="min-h-screen w-full flex items-center pt-24 md:pt-0">
+                <div className="container mx-auto px-6 flex flex-col md:flex-row items-center justify-between w-full">
+                    <div className="md:w-1/2 lg:w-2/5 text-center md:text-left mb-12 md:mb-0 z-10">
+                        <h1 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter text-slate-100 mb-4">Master AI</h1>
+                        <h2 className="text-4xl md:text-6xl lg:text-7xl font-black tracking-tighter hero-gradient-text mb-6">Before AI Masters You</h2>
+                        <p className="max-w-xl mx-auto md:mx-0 text-lg md:text-xl text-slate-400 mb-10">
+                            Lead AI is an exclusive circle for practitioners dedicated to decoding the future of AI in real-time and gaining a definitive competitive edge.
+                        </p>
+                        <Link to="#pillars" className="bg-slate-100 text-slate-900 font-bold px-8 py-4 rounded-lg text-lg hover:bg-slate-200 transition-transform duration-300 hover:scale-105 inline-block">
+                            Discover Our Pillars
+                        </Link>
+                    </div>
+                    <div className="md:w-1/2 w-full h-[50vh] md:h-[600px]">
+                        <NeuralNetworkAnimation />
+                    </div>
+                </div>
+            </section>
+        );
+
+        // Mission Component
+        const Mission = () => (
+            <section id="mission" className="py-20 bg-transparent relative z-10">
+                <div className="container mx-auto px-6">
+                    <div className="grid md:grid-cols-2 gap-12 items-center">
+                        <div className="card-bg p-8 rounded-2xl">
+                            <h3 className="text-3xl font-bold mb-4 text-slate-100">Our Mission</h3>
+                            <p className="text-slate-300 leading-relaxed">
+                                "Our mission is to forge a disciplined circle of AI practitioners who decode the future in real-time. Through a relentless weekly exchange of tactical intelligence and proven solutions, we arm our members with the clarity and advantage needed to master the AI revolution."
+                            </p>
+                        </div>
+                        <div className="card-bg p-8 rounded-2xl">
+                            <h3 className="text-3xl font-bold mb-4 text-slate-100">Our Vision</h3>
+                            <p className="text-slate-300 leading-relaxed">
+                                "To become the definitive engine for AI excellence. Lead AI will be the nexus where top talent, groundbreaking projects, and industry-defining opportunities converge, creating the architects who will command the next era of technological evolution."
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        );
+
+        // Pillars Component
+        const Pillars = () => (
+            <section id="pillars" className="py-24 relative z-10 bg-transparent">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-100">The Lead AI Advantage</h2>
+                        <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">
+                            Our sessions are built around four powerful pillars designed to deliver actionable intelligence.
+                        </p>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-4 md:grid-rows-2 gap-4">
+                        {PILLARS.map((pillar) => (
+                            <div key={pillar.id} className={`card-bg p-8 rounded-2xl ${pillar.gridClass}`}>
+                                <div className="mb-4">{pillar.icon}</div>
+                                <h4 className="text-xl md:text-2xl font-bold mb-3 text-slate-100">{pillar.title}</h4>
+                                <p className="text-slate-400 text-sm md:text-base">{pillar.description}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        // FoundingMembers Component (UPDATED to match requested styling)
+        const FoundingMembers = () => (
+            <section id="founding-members" className="py-24 relative z-10 bg-transparent">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-100">Meet Our Founding Members</h2>
+                        <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">The core group that started the Lead AI initiative.</p>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {FOUNDING_MEMBERS.map((member, index) => (
+                            <div key={index} className="community-card">
+                                <div className="avatar-glow-ring">
+                                    <div className="avatar-inner">
+                                        <img src={member.imageUrl} alt={member.name} className="community-avatar" />
+                                    </div>
+                                </div>
+                                <h3 className="community-name">{member.name}</h3>
+                                <p className="text-[#ff2e63] font-medium text-sm mb-1">{member.title}</p>
+                                <p className="community-role text-xs">{member.company || member.experience}</p>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            </section>
+        );
+
+        // CommunityPage Component
+        const CommunityPage = ({ users }) => (
+            <section id="community" className="py-24 pt-40 bg-transparent relative z-10 min-h-screen">
+                <div className="container mx-auto px-6">
+                    <div className="text-center mb-16">
+                        <h2 className="text-4xl md:text-5xl font-bold tracking-tight text-slate-100">Our Community</h2>
+                        <p className="mt-4 text-lg text-slate-400 max-w-2xl mx-auto">A growing network of AI practitioners and innovators. Click a profile to see their portfolio.</p>
+                    </div>
+                    {users.length > 0 ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                            {users.map((user) => (
+                                <Link key={user.id} to={`#/profile/${user.username}`} className="community-card">
+                                    <div className="avatar-glow-ring">
+                                        <div className="avatar-inner">
+                                            <img src={user.portfolio.profile_image_url || `https://i.pravatar.cc/150?u=${user.id}`} alt={user.username} className="community-avatar" />
+                                        </div>
+                                    </div>
+                                    <h3 className="community-name">{user.username}</h3>
+                                    <p className="community-role">{user.portfolio.tagline || 'AI Practitioner'}</p>
+                                </Link>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="text-center text-slate-400"><p>No members have registered yet. Be the first to join!</p></div>
+                    )}
+                </div>
+            </section>
+        );
+
+        // --- BARLEY THEME PORTFOLIO PAGE ---
+        const PortfolioPage = ({ user, currentUser, onUpdate }) => {
+            const canEdit = currentUser && user && (String(currentUser.id) === String(user.id) || currentUser.username === user.username);
+            const [isEditing, setIsEditing] = useState(false);
+            const [isSaving, setIsSaving] = useState(false);
+            const [editUser, setEditUser] = useState(user);
+            const [newSkill, setNewSkill] = useState('');
+            const [isCopied, setIsCopied] = useState(false);
+            const profileImageRef = useRef(null);
+            const projectImageRefs = useRef([]);
+
+            useEffect(() => {
+                setEditUser(JSON.parse(JSON.stringify(user)));
+                projectImageRefs.current = user.portfolio.projects.map(() => null);
+                setIsEditing(false);
+            }, [user]);
+
+            const handleSave = async () => {
+                setIsSaving(true);
+                const success = await onUpdate(user.username, { username: editUser.username, portfolio: editUser.portfolio });
+                setIsSaving(false);
+                if (success) setIsEditing(false);
+            };
+
+            const handleFileRead = (file, callback) => {
+                const reader = new FileReader();
+                reader.onloadend = () => callback(reader.result);
+                reader.readAsDataURL(file);
+            };
+
+            const formatUrl = (url) => {
+                if (!url) return '#';
+                const trimmed = url.trim();
+                if (trimmed.startsWith('http://') || trimmed.startsWith('https://') || trimmed.startsWith('mailto:')) return trimmed;
+                return 'https://' + trimmed;
+            };
+
+            const updatePortfolio = (field, value) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, [field]: value } }));
+            const updateContact = (field, value) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, contact: { ...prev.portfolio.contact, [field]: value } } }));
+            const addProject = () => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: [...prev.portfolio.projects, { title: 'New Project', description: '', link: '', imageUrl: '' }] } }));
+            const updateProject = (i, field, val) => { const n = [...editUser.portfolio.projects]; n[i] = { ...n[i], [field]: val }; setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: n } })); };
+            const removeProject = (i) => { const n = editUser.portfolio.projects.filter((_, idx) => idx !== i); setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, projects: n } })); };
+            const addSkill = () => { if (newSkill && !editUser.portfolio.skills_list.includes(newSkill)) { setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, skills_list: [...prev.portfolio.skills_list, newSkill] } })); setNewSkill(''); } };
+            const removeSkill = (s) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, skills_list: prev.portfolio.skills_list.filter(x => x !== s) } }));
+
+            const addExperience = () => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, experience_list: [...prev.portfolio.experience_list, { role: 'Role', company: 'Company', duration: 'Duration', description: 'Description' }] } }));
+            const updateExperience = (i, field, val) => { const n = [...editUser.portfolio.experience_list]; n[i][field] = val; setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, experience_list: n } })); };
+            const removeExperience = (i) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, experience_list: prev.portfolio.experience_list.filter((_, idx) => idx !== i) } }));
+
+            const addEducation = () => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, education_list: [...prev.portfolio.education_list, { degree: 'Degree', institution: 'Institution', year: 'Year' }] } }));
+            const updateEducation = (i, field, val) => { const n = [...editUser.portfolio.education_list]; n[i][field] = val; setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, education_list: n } })); };
+            const removeEducation = (i) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, education_list: prev.portfolio.education_list.filter((_, idx) => idx !== i) } }));
+
+            const addCertification = () => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, certifications_list: [...prev.portfolio.certifications_list, { name: 'Certification Name', issuer: 'Issuer', date: 'Date' }] } }));
+            const updateCertification = (i, field, val) => { const n = [...editUser.portfolio.certifications_list]; n[i][field] = val; setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, certifications_list: n } })); };
+            const removeCertification = (i) => setEditUser(prev => ({ ...prev, portfolio: { ...prev.portfolio, certifications_list: prev.portfolio.certifications_list.filter((_, idx) => idx !== i) } }));
+
+            return (
+                <div className={`barley-wrapper relative ${canEdit ? 'pt-44' : 'pt-24'}`}>
+                    {/* Fixed Portfolio Navigation Bar */}
+                    <nav className={`fixed left-0 right-0 z-40 bg-black/80 backdrop-blur-md border-b border-white/10 py-4 px-6 md:px-12 flex justify-between items-center shadow-lg transition-all duration-300 ${canEdit ? 'top-[74px]' : 'top-0'}`}>
+                        <div className="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-violet-500">
+                            {editUser.username}
+                        </div>
+                        <div className="hidden md:flex gap-6 lg:gap-8">
+                            {['Home', 'About Me', 'Skills', 'Projects', 'Experience', 'Education', 'Certification', 'Contact Me'].map((item) => (
+                                <a
+                                    key={item}
+                                    href={`#${item.toLowerCase().replace(/\s+/g, '-')}`}
+                                    onClick={(e) => {
+                                        e.preventDefault();
+                                        const id = item.toLowerCase().replace(/\s+/g, '-');
+                                        document.getElementById(id)?.scrollIntoView({ behavior: 'smooth' });
+                                    }}
+                                    className="text-gray-400 hover:text-[#ff2e63] font-medium transition-colors text-sm uppercase tracking-wider"
+                                >
+                                    {item}
+                                </a>
+                            ))}
+                        </div>
+                        {/* Mobile Menu Icon (Placeholder for now, keeping it simple as requested) */}
+                        <div className="md:hidden text-gray-400"><i className="ri-menu-line text-2xl"></i></div>
+                    </nav>
+
+                    {canEdit && !isEditing && (
+                        <button onClick={() => setIsEditing(true)} className="fixed bottom-10 right-10 z-[9999] bg-[#ff2e63] text-white p-4 rounded-full shadow-[0_0_20px_rgba(255,46,99,0.5)] hover:scale-110 transition-transform flex items-center justify-center gap-2 font-bold cursor-pointer"><i className="ri-pencil-fill text-xl"></i> <span className="hidden md:inline">Edit Profile</span></button>
+                    )}
+                    {canEdit && isEditing && (
+                        <div className="fixed top-20 left-0 right-0 z-[9000] bg-black/90 border-b border-[#ff2e63] p-4 flex justify-between items-center shadow-2xl">
+                            <span className="text-[#ff2e63] font-bold ml-4">EDITING MODE</span>
+                            <div className="flex gap-4 mr-4">
+                                <button onClick={() => { setIsEditing(false); setEditUser(JSON.parse(JSON.stringify(user))) }} className="text-gray-400 hover:text-white">Cancel</button>
+                                <button onClick={handleSave} disabled={isSaving} className="barley-btn barley-btn-primary py-2 px-6 rounded text-sm">{isSaving ? 'Saving...' : 'Save Changes'}</button>
+                            </div>
+                        </div>
+                    )}
+                    <div className="container mx-auto px-6 max-w-6xl pb-20">
+
+
+
+                        <section id="home" className="flex flex-col-reverse md:flex-row items-center gap-10 min-h-[80vh] py-10 pt-20">
+                            <div className="flex-1 w-full text-center md:text-left z-10">
+                                <h1 className="text-5xl md:text-7xl font-extrabold mb-4 leading-tight">Hello, I am<br />{isEditing ? <input value={editUser.username} onChange={e => setEditUser({ ...editUser, username: e.target.value })} className="barley-input text-4xl mt-2 font-bold" /> : <span className="text-white">{editUser.username}</span>}</h1>
+                                <h2 className="text-2xl md:text-3xl font-semibold mb-6">{isEditing ? <input value={editUser.portfolio.tagline} onChange={e => updatePortfolio('tagline', e.target.value)} className="barley-input" /> : <span className="barley-highlight">{editUser.portfolio.tagline}</span>}</h2>
+                                <div className="flex justify-center md:justify-start gap-6 text-2xl mb-8 text-gray-400">
+                                    {isEditing ? (
+                                        <div className="w-full grid gap-2 max-w-sm"><input placeholder="LinkedIn" value={editUser.portfolio.contact.linkedin} onChange={e => updateContact('linkedin', e.target.value)} className="barley-input text-sm" /><input placeholder="GitHub" value={editUser.portfolio.contact.github} onChange={e => updateContact('github', e.target.value)} className="barley-input text-sm" /></div>
+                                    ) : (
+                                        <>
+                                            {editUser.portfolio.contact.linkedin && <a href={formatUrl(editUser.portfolio.contact.linkedin)} target="_blank" title="LinkedIn"><i className="ri-linkedin-fill hover:text-[#ff2e63]"></i></a>}
+                                            {editUser.portfolio.contact.github && <a href={formatUrl(editUser.portfolio.contact.github)} target="_blank" title="GitHub"><i className="ri-github-fill hover:text-[#ff2e63]"></i></a>}
+                                            <a href={`mailto:${editUser.portfolio.contact.email}`} title="Email"><i className="ri-mail-line hover:text-[#ff2e63]"></i></a>
+                                        </>
+                                    )}
+                                </div>
+                                {/* Share Profile Button replaced Hire Me */}
+                                <button onClick={() => {
+                                    navigator.clipboard.writeText(window.location.href);
+                                    setIsCopied(true);
+                                    setTimeout(() => setIsCopied(false), 2000);
+                                }} className="barley-btn barley-btn-primary" id="share-profile-btn">
+                                    {isCopied ? (
+                                        <>
+                                            <i className="ri-check-line"></i> Copied!
+                                        </>
+                                    ) : (
+                                        <>
+                                            <i className="ri-share-line"></i> Share Profile
+                                        </>
+                                    )}
+                                </button>
+                            </div>
+                            <div className="flex-1 flex justify-center w-full relative">
+                                <div className="relative group w-full max-w-xl">
+                                    <div className="absolute inset-0 bg-[#ff2e63] opacity-20 blur-3xl rounded-full -z-10"></div>
+                                    <img src={editUser.portfolio.profile_image_url || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1000&auto=format&fit=crop"} className="w-full h-auto rounded-2xl object-cover shadow-2xl grayscale group-hover:grayscale-0 transition-all duration-500" />
+                                    {isEditing && <button onClick={() => profileImageRef.current.click()} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity rounded-2xl cursor-pointer"><span className="barley-btn barley-btn-primary text-sm">Change Photo</span></button>}
+                                    <input type="file" ref={profileImageRef} className="hidden" accept="image/*" onChange={e => e.target.files[0] && handleFileRead(e.target.files[0], res => updatePortfolio('profile_image_url', res))} />
+                                </div>
+                            </div>
+                        </section>
+                        <section id="about-me" className="py-16 border-t border-white/10"><h2 className="text-3xl font-bold mb-8 flex items-center gap-3">About Me <div className="h-1 w-20 bg-[#ff2e63]"></div></h2><div className="barley-card">{isEditing ? <textarea value={editUser.portfolio.about_me} onChange={e => updatePortfolio('about_me', e.target.value)} className="barley-textarea h-40" /> : <p className="text-gray-300 text-lg leading-relaxed whitespace-pre-line">{editUser.portfolio.about_me}</p>}</div></section>
+                        <section id="skills" className="py-16 border-t border-white/10"><h2 className="text-3xl font-bold mb-8 flex items-center gap-3">Skills <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>{isEditing && (<div className="flex gap-2 mb-6"><input value={newSkill} onChange={e => setNewSkill(e.target.value)} onKeyDown={e => e.key === 'Enter' && addSkill()} className="barley-input max-w-xs" placeholder="Add Skill" /><button onClick={addSkill} className="barley-btn barley-btn-primary px-4"><i className="ri-add-line"></i></button></div>)}<div className="flex flex-wrap gap-4">{editUser.portfolio.skills_list.map((skill, i) => (<div key={i} className="px-6 py-3 rounded-full bg-white/5 border border-white/10 flex items-center gap-2 hover:border-[#ff2e63] transition-colors"><i className="ri-checkbox-circle-fill text-[#ff2e63]"></i> {skill}{isEditing && <button onClick={() => removeSkill(skill)} className="text-red-400 ml-2">&times;</button>}</div>))}</div></section>
+                        <section id="projects" className="py-16 border-t border-white/10">
+                            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-bold flex items-center gap-3">Projects <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>{isEditing && <button onClick={addProject} className="barley-btn barley-btn-primary text-sm">Add Project</button>}</div>
+                            <div className="grid md:grid-cols-2 gap-8">
+                                {editUser.portfolio.projects.map((proj, i) => (
+                                    <div key={i} className="barley-card group p-0 relative">
+                                        {isEditing && <button onClick={() => removeProject(i)} className="absolute top-2 right-2 z-20 bg-black/50 text-red-500 p-2 rounded-full hover:bg-black"><i className="ri-delete-bin-line"></i></button>}
+                                        <div className="h-56 bg-gray-900 relative overflow-hidden">{proj.imageUrl ? <img src={proj.imageUrl} className="w-full h-full object-cover group-hover:scale-105 transition-transform" /> : <div className="w-full h-full flex items-center justify-center text-gray-700"><i className="ri-image-line text-4xl"></i></div>}{isEditing && (<div className="absolute inset-0 bg-black/70 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"><button onClick={() => projectImageRefs.current[i].click()} className="barley-btn barley-btn-secondary text-xs">Upload Image</button><input type="file" ref={el => projectImageRefs.current[i] = el} className="hidden" accept="image/*" onChange={e => e.target.files[0] && handleFileRead(e.target.files[0], res => { const np = [...editUser.portfolio.projects]; np[i].imageUrl = res; setEditUser({ ...editUser, portfolio: { ...editUser.portfolio, projects: np } }) })} /></div>)}</div>
+                                        <div className="p-6">{isEditing ? (<div className="space-y-3"><input value={proj.title} onChange={e => updateProject(i, 'title', e.target.value)} className="barley-input font-bold" placeholder="Title" /><textarea value={proj.description} onChange={e => updateProject(i, 'description', e.target.value)} className="barley-input text-sm" placeholder="Description" /><input value={proj.link} onChange={e => updateProject(i, 'link', e.target.value)} className="barley-input text-xs" placeholder="Link" /></div>) : (<><h3 className="text-xl font-bold mb-2 text-white">{proj.title}</h3><p className="text-gray-400 text-sm mb-4">{proj.description}</p>{proj.link && <a href={formatUrl(proj.link)} target="_blank" className="text-[#ff2e63] font-bold text-sm hover:underline">VIEW PROJECT &rarr;</a>}</>)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+                        <section id="experience" className="py-16 border-t border-white/10">
+                            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-bold flex items-center gap-3">Experience <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>{isEditing && <button onClick={addExperience} className="barley-btn barley-btn-primary text-sm">Add Item</button>}</div>
+                            <div className="space-y-8">
+                                {editUser.portfolio.experience_list.map((exp, i) => (
+                                    <div key={i} className="barley-card relative">
+                                        {isEditing && <button onClick={() => removeExperience(i)} className="absolute top-4 right-4 text-red-500 hover:text-white"><i className="ri-delete-bin-line"></i></button>}
+                                        {isEditing ? (
+                                            <div className="grid gap-3">
+                                                <input value={exp.role} onChange={e => updateExperience(i, 'role', e.target.value)} className="barley-input font-bold" placeholder="Role" />
+                                                <input value={exp.company} onChange={e => updateExperience(i, 'company', e.target.value)} className="barley-input text-sm" placeholder="Company" />
+                                                <input value={exp.duration} onChange={e => updateExperience(i, 'duration', e.target.value)} className="barley-input text-xs" placeholder="Duration" />
+                                                <textarea value={exp.description} onChange={e => updateExperience(i, 'description', e.target.value)} className="barley-input text-sm" placeholder="Description" />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <h3 className="text-2xl font-bold text-white mb-1">{exp.role}</h3>
+                                                <p className="text-[#ff2e63] font-medium mb-1">{exp.company}</p>
+                                                <p className="text-gray-500 text-xs mb-4">{exp.duration}</p>
+                                                <p className="text-gray-300 leading-relaxed">{exp.description}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section id="education" className="py-16 border-t border-white/10">
+                            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-bold flex items-center gap-3">Education <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>{isEditing && <button onClick={addEducation} className="barley-btn barley-btn-primary text-sm">Add Item</button>}</div>
+                            <div className="grid md:grid-cols-2 gap-6">
+                                {editUser.portfolio.education_list.map((edu, i) => (
+                                    <div key={i} className="barley-card relative">
+                                        {isEditing && <button onClick={() => removeEducation(i)} className="absolute top-4 right-4 text-red-500 hover:text-white"><i className="ri-delete-bin-line"></i></button>}
+                                        {isEditing ? (
+                                            <div className="grid gap-3">
+                                                <input value={edu.degree} onChange={e => updateEducation(i, 'degree', e.target.value)} className="barley-input font-bold" placeholder="Degree" />
+                                                <input value={edu.institution} onChange={e => updateEducation(i, 'institution', e.target.value)} className="barley-input text-sm" placeholder="Institution" />
+                                                <input value={edu.year} onChange={e => updateEducation(i, 'year', e.target.value)} className="barley-input text-xs" placeholder="Year" />
+                                            </div>
+                                        ) : (
+                                            <>
+                                                <h3 className="text-xl font-bold text-white mb-2">{edu.degree}</h3>
+                                                <p className="text-gray-400">{edu.institution}</p>
+                                                <p className="text-[#ff2e63] text-sm mt-2">{edu.year}</p>
+                                            </>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section id="certification" className="py-16 border-t border-white/10">
+                            <div className="flex justify-between items-center mb-10"><h2 className="text-3xl font-bold flex items-center gap-3">Certification <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>{isEditing && <button onClick={addCertification} className="barley-btn barley-btn-primary text-sm">Add Item</button>}</div>
+                            <div className="flex flex-wrap gap-6">
+                                {editUser.portfolio.certifications_list.map((cert, i) => (
+                                    <div key={i} className="barley-card relative flex-1 min-w-[300px]">
+                                        {isEditing && <button onClick={() => removeCertification(i)} className="absolute top-4 right-4 text-red-500 hover:text-white"><i className="ri-delete-bin-line"></i></button>}
+                                        {isEditing ? (
+                                            <div className="grid gap-3">
+                                                <input value={cert.name} onChange={e => updateCertification(i, 'name', e.target.value)} className="barley-input font-bold" placeholder="Certification Name" />
+                                                <input value={cert.issuer} onChange={e => updateCertification(i, 'issuer', e.target.value)} className="barley-input text-sm" placeholder="Issuer" />
+                                                <input value={cert.date} onChange={e => updateCertification(i, 'date', e.target.value)} className="barley-input text-xs" placeholder="Date" />
+                                            </div>
+                                        ) : (
+                                            <div className="flex items-start gap-4">
+                                                <div className="p-3 bg-white/5 rounded-full text-[#ff2e63]"><i className="ri-award-fill text-2xl"></i></div>
+                                                <div>
+                                                    <h3 className="text-lg font-bold text-white">{cert.name}</h3>
+                                                    <p className="text-gray-400 text-sm">{cert.issuer}</p>
+                                                    <p className="text-xs text-gray-500 mt-1">{cert.date}</p>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                ))}
+                            </div>
+                        </section>
+
+                        <section id="contact-me" className="py-16 border-t border-white/10">
+                            <h2 className="text-3xl font-bold mb-8 flex items-center gap-3">Contact Me <div className="h-1 w-20 bg-[#ff2e63]"></div></h2>
+                            <div className="grid md:grid-cols-2 gap-10">
+                                <div className="barley-card">
+                                    <h3 className="text-xl font-bold text-white mb-6">Get in Touch</h3>
+                                    <form onSubmit={(e) => { e.preventDefault(); alert("Message functionality coming soon!") }} className="space-y-4">
+                                        <div>
+                                            <label className="block text-gray-400 text-sm mb-2">Name</label>
+                                            <input type="text" className="barley-input w-full" placeholder="Your Name" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-400 text-sm mb-2">Email</label>
+                                            <input type="email" className="barley-input w-full" placeholder="your@email.com" required />
+                                        </div>
+                                        <div>
+                                            <label className="block text-gray-400 text-sm mb-2">Message</label>
+                                            <textarea className="barley-textarea w-full h-32" placeholder="How can I help you?" required></textarea>
+                                        </div>
+                                        <button type="submit" className="barley-btn barley-btn-primary w-full py-3">Send Message</button>
+                                    </form>
+                                </div>
+                                <div className="flex flex-col justify-center space-y-6">
+                                    <div className="barley-card md:text-left text-center">
+                                        <i className="ri-mail-send-fill text-4xl text-[#ff2e63] mb-4 block"></i>
+                                        <h4 className="text-lg font-bold text-white mb-2">Email</h4>
+                                        <p className="text-gray-400">{editUser.portfolio.contact.email || "No email provided"}</p>
+                                    </div>
+                                    <div className="barley-card md:text-left text-center">
+                                        <i className="ri-linkedin-box-fill text-4xl text-[#ff2e63] mb-4 block"></i>
+                                        <h4 className="text-lg font-bold text-white mb-2">LinkedIn</h4>
+                                        <p className="text-gray-400">{editUser.portfolio.contact.linkedin ? "Available" : "Not connected"}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+                        <footer className="text-center text-gray-500 mt-20 text-sm">&copy; 2024 {editUser.username}. Designed with Lead AI.</footer>
+                    </div>
+                </div>
+            );
+        };
+
+        // Footer Component (Global)
+        const Footer = () => (
+            <footer className="border-t border-slate-800 relative z-10 bg-transparent">
+                <div className="container mx-auto px-6 py-8 text-center text-slate-400">
+                    <p>&copy; 2024 Lead AI. All rights reserved.</p>
+                    <p className="text-sm text-slate-500 mt-2">Forging the future of AI excellence.</p>
+                </div>
+            </footer>
+        );
+
+        // --- MAIN APP COMPONENT ---
+        const Notification = ({ message, type, onClose }) => {
+            useEffect(() => {
+                const timer = setTimeout(onClose, 4000);
+                return () => clearTimeout(timer);
+            }, [onClose]);
+
+            return (
+                <div className={`fixed bottom-8 right-8 z-[100] px-6 py-4 rounded-lg shadow-2xl border backdrop-blur-md transition-all duration-300 transform translate-y-0 ${type === 'success' ? 'bg-green-900/80 border-green-500 text-green-100' : 'bg-red-900/80 border-red-500 text-red-100'
+                    }`}>
+                    <div className="flex items-center gap-3">
+                        {type === 'success' ? (
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path></svg>
+                        ) : (
+                            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        )}
+                        <p className="font-medium">{message}</p>
+                        <button onClick={onClose} className="ml-4 opacity-70 hover:opacity-100">&times;</button>
+                    </div>
+                </div>
+            );
+        };
+
+        const HomePage = () => (
+            <>
+                <Hero />
+                <Mission />
+                <Pillars />
+                <FoundingMembers />
+            </>
+        );
+
+        const NotFoundPage = () => (
+            <div className="min-h-screen flex items-center justify-center text-center">
+                <div>
+                    <h1 className="text-6xl font-bold hero-gradient-text">404</h1>
+                    <p className="text-2xl mt-4 text-slate-300">User Not Found</p>
+                    <Link to="#/community" className="mt-8 inline-block bg-slate-100 text-slate-900 font-bold px-8 py-4 rounded-lg text-lg hover:bg-slate-200 transition-transform duration-300 hover:scale-105">Back to Community</Link>
+                </div>
+            </div>
+        );
+
+        const hydrateUser = (dbUser) => {
+            const defaultPortfolio = {
+                tagline: "AI Enthusiast & Lifelong Learner",
+                about_me: `Hello, I'm ${dbUser.username}.`,
+                profile_image_url: '',
+                contact: { email: '', phone: '', location: '', linkedin: '', github: '', website: '' },
+                skills_list: [],
+                projects: [],
+                experience_list: [],
+                education_list: [],
+                certifications_list: [],
+            };
+
+            const portfolio = dbUser.portfolio || {};
+            const hydratedPortfolio = {
+                ...defaultPortfolio,
+                ...portfolio,
+                contact: { ...defaultPortfolio.contact, ...(portfolio.contact || {}) },
+                skills_list: Array.isArray(portfolio.skills_list) ? portfolio.skills_list : [],
+                projects: Array.isArray(portfolio.projects) ? portfolio.projects : [],
+                experience_list: Array.isArray(portfolio.experience_list) ? portfolio.experience_list : [],
+                education_list: Array.isArray(portfolio.education_list) ? portfolio.education_list : [],
+                certifications_list: Array.isArray(portfolio.certifications_list) ? portfolio.certifications_list : [],
+                profile_image_url: portfolio.profile_image_url || `https://i.pravatar.cc/150?u=${dbUser.id}`,
+            };
+
+            return {
+                id: dbUser.id,
+                username: dbUser.username || 'Unknown',
+                email: dbUser.email || '',
+                portfolio: hydratedPortfolio,
+            };
+        };
+
+        const App = () => {
+            const [authModal, setAuthModal] = useState({ isOpen: false, view: 'login' });
+            const [users, setUsers] = useState([]);
+            const [currentUser, setCurrentUser] = useState(null);
+            const [route, setRoute] = useState(window.location.hash);
+            const [loading, setLoading] = useState(true);
+            const [notification, setNotification] = useState(null);
+
+            const showNotification = (message, type) => {
+                setNotification({ message, type });
+            };
+
+            useEffect(() => {
+                const initApp = async () => {
+                    const storedUserStr = localStorage.getItem('lead_ai_user');
+                    if (storedUserStr) {
+                        try {
+                            const storedUser = JSON.parse(storedUserStr);
+                            const { data } = await supabase.from('profiles').select('id, username, email, portfolio').eq('id', storedUser.id).single();
+                            if (data) {
+                                setCurrentUser(hydrateUser(data));
+                            } else {
+                                localStorage.removeItem('lead_ai_user');
+                            }
+                        } catch (e) {
+                            localStorage.removeItem('lead_ai_user');
+                        }
+                    }
+                    await fetchCommunity();
+                    setLoading(false);
+                };
+                initApp();
+            }, []);
+
+            const fetchCommunity = async () => {
+                const { data, error } = await supabase.from('profiles').select('id, username, email, portfolio');
+                if (!error && data) {
+                    setUsers(data.map(hydrateUser));
+                }
+            };
+
+            useEffect(() => {
+                const handleHashChange = () => setRoute(window.location.hash);
+                window.addEventListener('hashchange', handleHashChange);
+                return () => window.removeEventListener('hashchange', handleHashChange);
+            }, []);
+
+            const handleRegister = useCallback(async (username, email, password) => {
+                try {
+                    const { data: existingUsers } = await supabase.from('profiles').select('email').eq('email', email);
+                    if (existingUsers && existingUsers.length > 0) return { success: false, message: "User already registered. Please login." };
+
+                    const newId = crypto.randomUUID();
+                    const newPortfolio = {
+                        tagline: "AI Enthusiast & Lifelong Learner",
+                        about_me: `Hello, I'm ${username}. I'm new here!`,
+                        profile_image_url: `https://i.pravatar.cc/150?u=${newId}`,
+                        contact: { email, phone: '', location: '', linkedin: '', github: '', website: '' },
+                        skills_list: ['AI', 'Machine Learning'],
+                        projects: [],
+                        experience_list: [],
+                        education_list: [],
+                    };
+
+                    const { error: insertError } = await supabase.from('profiles').insert([{ id: newId, username: username, email: email, pass: password, portfolio: newPortfolio }]);
+                    if (insertError) return { success: false, message: insertError.message };
+
+                    const newUser = hydrateUser({ id: newId, username, email, portfolio: newPortfolio });
+                    setCurrentUser(newUser);
+                    localStorage.setItem('lead_ai_user', JSON.stringify(newUser));
+                    setAuthModal({ isOpen: false, view: 'login' });
+                    showNotification("Registration successful! Welcome aboard.", 'success');
+                    await fetchCommunity();
+                    setTimeout(() => { window.location.hash = `#/profile/${username}`; }, 100);
+                    return { success: true };
+                } catch (e) {
+                    return { success: false, message: e.message || "Unexpected error occurred" };
+                }
+            }, []);
+
+            const handleLogin = useCallback(async (email, password) => {
+                try {
+                    const { data, error } = await supabase.from('profiles').select('id, username, email, portfolio').eq('email', email).eq('pass', password);
+                    if (error) return { success: false, message: error.message };
+                    if (!data || data.length === 0) return { success: false, message: "User not registered. Please check email and password or sign up." };
+
+                    const user = hydrateUser(data[0]);
+                    setCurrentUser(user);
+                    localStorage.setItem('lead_ai_user', JSON.stringify(user));
+                    setAuthModal({ isOpen: false, view: 'login' });
+                    showNotification("Successfully logged in!", 'success');
+                    return { success: true };
+                } catch (e) {
+                    return { success: false, message: "An unexpected error occurred." };
+                }
+            }, []);
+
+            const handleLogout = useCallback(async () => {
+                localStorage.removeItem('lead_ai_user');
+                setCurrentUser(null);
+                window.location.hash = '#';
+                showNotification("Logged out successfully", 'success');
+            }, []);
+
+            const handleUpdateUser = useCallback(async (currentUsername, updates) => {
+                if (!currentUser) return false;
+                const updatedProfile = { username: updates.username || currentUser.username, portfolio: { ...currentUser.portfolio, ...updates.portfolio } };
+                const { error } = await supabase.from('profiles').update({ username: updatedProfile.username, portfolio: updatedProfile.portfolio }).eq('id', currentUser.id);
+
+                if (error) {
+                    showNotification("Failed to save changes. Please try again.", 'error');
+                    return false;
+                } else {
+                    const newUserData = { ...currentUser, ...updatedProfile };
+                    setCurrentUser(newUserData);
+                    localStorage.setItem('lead_ai_user', JSON.stringify(newUserData));
+                    showNotification("Profile updated successfully!", 'success');
+                    await fetchCommunity();
+                    if (updates.username && updates.username !== currentUsername) window.location.hash = `#/profile/${updates.username}`;
+                    return true;
+                }
+            }, [currentUser]);
+
+            const renderPage = () => {
+                if (loading) return <div className="h-screen flex items-center justify-center text-white">Loading Community...</div>;
+                const path = route.replace(/^#\/?/, '').split('/');
+                const page = path[0] || 'home';
+                const param = path[1];
+
+                if (page === 'community') return <CommunityPage users={users} />;
+                if (page === 'profile' && param) {
+                    const userToView = users.find(u => u.username.toLowerCase() === param.toLowerCase());
+                    return userToView ? <PortfolioPage user={userToView} currentUser={currentUser} onUpdate={handleUpdateUser} /> : <NotFoundPage />;
+                }
+                return <HomePage />;
+            };
+
+            return (
+                <>
+                    <div className="glow-effect"></div>
+                    {/* Conditionally render Header: Show on non-profile pages OR if owner is viewing their own profile */}
+                    {(!route.startsWith('#/profile') || (currentUser && route.includes(currentUser.username))) && (
+                        <Header currentUser={currentUser} onLoginClick={() => setAuthModal({ isOpen: true, view: 'login' })} onRegisterClick={() => setAuthModal({ isOpen: true, view: 'register' })} onLogout={handleLogout} />
+                    )}
+                    <main>{renderPage()}</main>
+                    {/* Conditionally render Footer: Same logic as Header */}
+                    {(!route.startsWith('#/profile') || (currentUser && route.includes(currentUser.username))) && <Footer />}
+                    {authModal.isOpen && <AuthModal initialView={authModal.view} onRegister={handleRegister} onLogin={handleLogin} onClose={() => setAuthModal({ isOpen: false, view: 'login' })} />}
+                    {notification && <Notification message={notification.message} type={notification.type} onClose={() => setNotification(null)} />}
+                </>
+            );
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<App />);
+    </script>
+</body>
+
+</html>
